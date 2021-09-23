@@ -1,93 +1,122 @@
 from typing import Dict
-
-from .constants import Constants
-from .game_map import Position
-from .game_constants import GAME_CONSTANTS
-
+#import game constant and make them available to the program
+from lux.constants import Constants
 UNIT_TYPES = Constants.UNIT_TYPES
 
+from lux.game_map import Position
+from lux.game_constants import GAME_CONSTANTS
 
 class Player:
+    """ Encapsulates all player relevant objects, like units, cities and research points.
+    """
     def __init__(self, team):
         self.team = team
+        """"???"""
         self.research_points = 0
+        """total research points. research point milestones are needed to mine higher resources."""
         self.units: list[Unit] = []
+        """list of units of the player."""
         self.cities: Dict[str, City] = {}
+        """dictionary of cities of the player."""
         self.city_tile_count = 0
+        """total city tiles owned by the player. first factor for victory condition."""
+    def researched_wood(self) -> bool:
+        """Returns: true: player has enough research points to collect the resource"""
+        return self.research_points >= GAME_CONSTANTS["PARAMETERS"]["RESEARCH_REQUIREMENTS"]["WOOD"]
     def researched_coal(self) -> bool:
+        """Returns: true: player has enough research points to collect the resource"""
         return self.research_points >= GAME_CONSTANTS["PARAMETERS"]["RESEARCH_REQUIREMENTS"]["COAL"]
     def researched_uranium(self) -> bool:
+        """Returns: true: player has enough research points to collect the resource"""
         return self.research_points >= GAME_CONSTANTS["PARAMETERS"]["RESEARCH_REQUIREMENTS"]["URANIUM"]
 
 
 class City:
+    """A city is made of adjacient city tiles"""
     def __init__(self, teamid, cityid, fuel, light_upkeep):
         self.cityid = cityid
+        """ID of the city"""
         self.team = teamid
+        """???"""
         self.fuel = fuel
+        """Total fuel stored inside the city. All city tiles shares one storage."""
         self.citytiles: list[CityTile] = []
+        """List of CityTile that make up the city"""
         self.light_upkeep = light_upkeep
+        """TOTAL light upkeep of the city. Increases with #CityTile and decreases with adjacency bonuses"""
     def _add_city_tile(self, x, y, cooldown):
+        """add a CityTile to a City. adjacent CityTile make up a city."""
         ct = CityTile(self.team, self.cityid, x, y, cooldown)
         self.citytiles.append(ct)
         return ct
     def get_light_upkeep(self):
+        """total light upkeep of the city"""
         return self.light_upkeep
 
 
 class CityTile:
+    """Enumerates all attributes and actions of a CityTile"""
     def __init__(self, teamid, cityid, x, y, cooldown):
         self.cityid = cityid
+        """???"""
         self.team = teamid
+        """???"""
         self.pos = Position(x, y)
+        """position on the map"""
         self.cooldown = cooldown
+        """#of turns before the city can do an action. Cities have no CD reduction."""
     def can_act(self) -> bool:
-        """
-        Whether or not this unit can research or build
-        """
+        """Whether or not this unit can research or build"""
         return self.cooldown < 1
     def research(self) -> str:
-        """
-        returns command to ask this tile to research this turn
-        """
+        """returns command to ask this tile to research this turn"""
         return "r {} {}".format(self.pos.x, self.pos.y)
     def build_worker(self) -> str:
-        """
-        returns command to ask this tile to build a worker this turn
-        """
+        """returns command to ask this tile to build a worker this turn"""
         return "bw {} {}".format(self.pos.x, self.pos.y)
     def build_cart(self) -> str:
-        """
-        returns command to ask this tile to build a cart this turn
-        """
+        """returns command to ask this tile to build a cart this turn"""
         return "bc {} {}".format(self.pos.x, self.pos.y)
 
-
 class Cargo:
+    """Enumerates resources stored"""
     def __init__(self):
         self.wood = 0
+        """units of resource"""
         self.coal = 0
+        """units of resource"""
         self.uranium = 0
+        """units of resource"""
 
     def __str__(self) -> str:
+        """??? Might be to print out the cargo as debug"""
         return f"Cargo | Wood: {self.wood}, Coal: {self.coal}, Uranium: {self.uranium}"
 
-
 class Unit:
+    """Enumerates attributes and actions of a unit"""
     def __init__(self, teamid, u_type, unitid, x, y, cooldown, wood, coal, uranium):
+        
         self.pos = Position(x, y)
+        """position on the map"""
         self.team = teamid
+        """???"""
         self.id = unitid
+        """???"""
         self.type = u_type
+        """type of unit. type is enumerated in Constants.UNIT_TYPES"""
         self.cooldown = cooldown
+        """#of turns before unit can execute an action. """
         self.cargo = Cargo()
+        """cargo. resources stored."""
         self.cargo.wood = wood
         self.cargo.coal = coal
         self.cargo.uranium = uranium
     def is_worker(self) -> bool:
+        """Returns true if the unit is a worker"""
         return self.type == UNIT_TYPES.WORKER
 
     def is_cart(self) -> bool:
+        """Returns true if the unit is a cart"""
         return self.type == UNIT_TYPES.CART
 
     def get_cargo_space_left(self):

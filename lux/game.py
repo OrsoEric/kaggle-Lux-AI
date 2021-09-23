@@ -1,9 +1,9 @@
-from .constants import Constants
-from .game_map import GameMap
-from .game_objects import Player, Unit, City, CityTile
-
+#import game constant and make them available to the program
+from lux.constants import Constants
 INPUT_CONSTANTS = Constants.INPUT_CONSTANTS
 
+from lux.game_map import GameMap
+from lux.game_objects import Player, Unit, City, CityTile
 
 class Game:
     def _initialize(self, messages):
@@ -39,7 +39,7 @@ class Game:
         self._reset_player_states()
 
         for update in messages:
-            if update == "D_DONE":
+            if update == INPUT_CONSTANTS.DONE:
                 break
             strs = update.split(" ")
             input_identifier = strs[0]
