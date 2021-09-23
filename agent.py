@@ -6,6 +6,7 @@ Releases:
 """
 
 import math
+import logging
 #used to estimate resource use of the agent
 from time import perf_counter
 
@@ -80,6 +81,7 @@ def agent(observation, configuration):
                 closest_resource_tile = None
                 # if the unit is a worker and we have space in cargo, lets find the nearest resource tile and try to mine it
                 for resource_tile in l_squares_with_resources:
+                    logging.info(f"{resource_tile}")
                     if resource_tile.resource.type == Constants.RESOURCE_TYPES.COAL and not player.researched_wood():                    
                         dist = resource_tile.pos.distance_to(my_unit.pos)
                         if dist < closest_dist:

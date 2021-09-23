@@ -1,0 +1,10 @@
+=== Agent Install Log ===
+=== Agent Compile Log ===
+=== Agent Error Log ===
+Traceback (most recent call last):
+  File "D:\Data\Project\Project Kaggle\2021-09 Kaggle Lux AI\github-repo\kaggle-Lux-AI\main.py", line 74, in <module>
+    actions = agent(observation, None)
+  File "D:\Data\Project\Project Kaggle\2021-09 Kaggle Lux AI\github-repo\kaggle-Lux-AI\agent.py", line 83, in agent
+    logging.info(f"{resource_tile}")
+NameError: name 'logging' is not defined
+Agent timed out
