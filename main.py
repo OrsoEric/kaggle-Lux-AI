@@ -23,9 +23,9 @@ if __name__ == "__main__":
 
     logging.basicConfig(
         #level of debug to show
-        level=logging.INFO,
+        level=logging.DEBUG,
         #header of the debug message
-        format='[%(asctime)s] %(levelname)s: %(message)s',
+        format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
     )
 
     def read_input():
