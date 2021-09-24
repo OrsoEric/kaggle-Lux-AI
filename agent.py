@@ -91,12 +91,12 @@ def agent(observation, configuration):
                                     closest_dist = dist
                                     closest_resource_tile = resource_tile
                         elif resource_tile.resource.type == Constants.RESOURCE_TYPES.COAL:
-                            if not player.researched_coal():
+                            if not player.researched(resource_tile.resource.type):
                                 continue
                             else:
                                 continue
                         elif resource_tile.resource.type == Constants.RESOURCE_TYPES.URANIUM:
-                            if not player.researched_uranium():
+                            if not player.researched(resource_tile.resource.type):
                                 continue
                             else:
                                 continue

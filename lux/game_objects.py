@@ -53,7 +53,7 @@ class City:
     """A city is made of adjacient city tiles"""
     def __init__(self, teamid, cityid, fuel, light_upkeep):
         self.cityid = cityid
-        """ID of the city"""
+        """???"""
         self.team = teamid
         """???"""
         self.fuel = fuel
@@ -62,17 +62,23 @@ class City:
         """List of CityTile that make up the city"""
         self.light_upkeep = light_upkeep
         """TOTAL light upkeep of the city. Increases with #CityTile and decreases with adjacency bonuses"""
+
     def _add_city_tile(self, x, y, cooldown):
         """add a CityTile to a City. adjacent CityTile make up a city."""
         ct = CityTile(self.team, self.cityid, x, y, cooldown)
         self.citytiles.append(ct)
         return ct
+
     def get_light_upkeep(self):
         """total light upkeep of the city"""
         return self.light_upkeep
 
+    def __str__(self) -> str:
+        return f"City {self.cityid} | fuel {self.fuel}"
+
 class CityTile:
     """Enumerates all attributes and actions of a CityTile"""
+
     def __init__(self, teamid, cityid, x, y, cooldown):
         self.cityid = cityid
         """???"""
@@ -82,18 +88,25 @@ class CityTile:
         """position on the map"""
         self.cooldown = cooldown
         """#of turns before the city can do an action. Cities have no CD reduction."""
+
     def can_act(self) -> bool:
         """Whether or not this unit can research or build"""
-        return self.cooldown < 1
+        return self.cooldown <= 0
+
     def research(self) -> str:
         """returns command to ask this tile to research this turn"""
         return "r {} {}".format(self.pos.x, self.pos.y)
+
     def build_worker(self) -> str:
         """returns command to ask this tile to build a worker this turn"""
         return "bw {} {}".format(self.pos.x, self.pos.y)
+
     def build_cart(self) -> str:
         """returns command to ask this tile to build a cart this turn"""
         return "bc {} {}".format(self.pos.x, self.pos.y)
+
+    def __str__(self) -> str:
+        return f"CityTile {self.pos} | CD: {self.cooldown}"
 
 class Cargo:
     """Enumerates resources stored"""
@@ -106,7 +119,6 @@ class Cargo:
         """units of resource"""
 
     def __str__(self) -> str:
-        """??? Might be to print out the cargo as debug"""
         return f"Cargo | Wood: {self.wood}, Coal: {self.coal}, Uranium: {self.uranium}"
 
 class Unit:
