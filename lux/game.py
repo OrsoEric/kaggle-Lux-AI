@@ -12,6 +12,7 @@ class Game:
         """
         self.id = int(messages[0])
         self.turn = -1
+        """turn index"""
         # get some other necessary initial input
         mapInfo = messages[1].split(" ")
         self.map_width = int(mapInfo[0])
@@ -30,9 +31,10 @@ class Game:
         self.players[1].cities = {}
         self.players[1].city_tile_count = 0
 
-    def _update(self, messages):
-        """
-        update state
+    def _update(self, messages: str() ):
+        """process observations into a game state
+        Args:
+            messages ([type]): [description]
         """
         self.map = GameMap(self.map_width, self.map_height)
         self.turn += 1
@@ -53,6 +55,7 @@ class Game:
                 amt = int(float(strs[4]))
                 self.map._setResource(r_type, x, y, amt)
             elif input_identifier == INPUT_CONSTANTS.UNITS:
+                #Add unit to game state
                 unittype = int(strs[1])
                 team = int(strs[2])
                 unitid = strs[3]
@@ -62,7 +65,9 @@ class Game:
                 wood = int(strs[7])
                 coal = int(strs[8])
                 uranium = int(strs[9])
+                #
                 self.players[team].units.append(Unit(team, unittype, unitid, x, y, cooldown, wood, coal, uranium))
+
             elif input_identifier == INPUT_CONSTANTS.CITY:
                 team = int(strs[1])
                 cityid = strs[2]

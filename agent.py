@@ -24,6 +24,10 @@ from lux.game_map import Cell
 from lux.game import Game
 
 from lux import annotate
+
+#Import the rule processor for the rule based agent
+from rule import Rule
+
 #???
 game_state = None
 
@@ -49,13 +53,29 @@ def agent(observation, configuration):
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
 
+    logging.debug(f"Turn {game_state.turn} | {player}")
+
     #list of actions the agent is going to send to the game engine. initialize to NOP
-    actions = list()
+    #actions = list()
+
+    #--------------------------------------------------------------------------------------------------------------------------------
+    #   Agent Rule Processor
+    #--------------------------------------------------------------------------------------------------------------------------------
+
+    if (game_state.turn >= 0):
+        #initialize rule processor with the game state
+        agent_rule_processor = Rule( game_state.map, player, opponent )
+        #ask the rule processor to come up with a list of actions
+        agent_actions = agent_rule_processor.compute_actions()
+    else:
+        agent_actions = list()
+
+    logging.debug(f"Actions: {agent_actions}")
 
     #--------------------------------------------------------------------------------------------------------------------------------
     #   Find all squares with resouces
     #--------------------------------------------------------------------------------------------------------------------------------
-
+    """
     #initialize a list of squares with resources to empty
     l_squares_with_resources: list[Cell] = list()
     #scan every 2D coordinate on the map
@@ -70,13 +90,14 @@ def agent(observation, configuration):
     #--------------------------------------------------------------------------------------------------------------------------------
     #   WORKER RULES
     #--------------------------------------------------------------------------------------------------------------------------------
-
+    
     #iterate over all units
     for my_unit in player.units:
         #WORKER RULES
         if my_unit.is_worker():
             #Worker is out of cooldown
             if my_unit.can_act():
+                #worker can collect more resources
                 if my_unit.get_cargo_space_left() > 0:
                     closest_dist = math.inf
                     closest_resource_tile = None
@@ -105,11 +126,18 @@ def agent(observation, configuration):
                             logging.critical(f"Unknown resource {resource_tile}")
                         
                     if closest_resource_tile is not None:
-                        logging.debug(f"Resource {closest_resource_tile} found by worker {my_unit}")
+                        logging.debug(f"Worker->Resource | Worker: {my_unit} | Resource: {closest_resource_tile}")
                         actions.append( my_unit.move( my_unit.pos.direction_to( closest_resource_tile.pos ) ) )
+                #worker cargo is full
                 else:
-                    # if unit is a worker and there is no cargo space left, and we have cities, lets return to them
-                    if len(player.cities) > 0:
+                    #worker satisfies the conditions to build a CityTile
+                    if my_unit.can_build( game_state.map ):
+                        logging.debug(f"Worker->Build City | Worker: {my_unit}")
+                        actions.append( my_unit.build_city() )
+
+                    #player has cities left
+                    elif len(player.cities) > 0:
+                        #search for the closest city
                         closest_dist = math.inf
                         closest_city_tile = None
                         for k, city in player.cities.items():
@@ -119,9 +147,14 @@ def agent(observation, configuration):
                                     closest_dist = dist
                                     closest_city_tile = city_tile
                         if closest_city_tile is not None:
-                            logging.debug(f"Worker {my_unit} returning to city {closest_city_tile}")
+                            logging.debug(f"Worker->City Tile | Worker: {my_unit} | CityTile {closest_city_tile}")
                             move_dir = my_unit.pos.direction_to(closest_city_tile.pos)
                             actions.append(my_unit.move(move_dir))
+                    #worker unable to build and player has no cities left
+                    else:
+                        #TODO move the worker where he can put down a new city
+                        pass
+
             #WORKER can't act
             else:
                 pass
@@ -146,10 +179,10 @@ def agent(observation, configuration):
             #if the city can act
             if my_city_tile.can_act() == True:
                 #have the city tile research
-                logging.debug(f"City {my_city_tile} does research")
+                logging.debug(f"Research: {my_city_tile}")
                 actions.append( my_city_tile.research() )
 
     # you can add debug annotations using the functions in the annotate object
     # actions.append(annotate.circle(0, 0))
-    
-    return actions
+    """
+    return agent_actions

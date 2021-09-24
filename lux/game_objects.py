@@ -8,6 +8,7 @@ from lux.constants import Constants
 UNIT_TYPES = Constants.UNIT_TYPES
 
 from lux.game_map import Position
+from lux.game_map import GameMap
 from lux.game_constants import GAME_CONSTANTS
 
 class Player:
@@ -38,15 +39,21 @@ class Player:
             return False
         #return true if resource is known. the json constant file needs capital strings
         return self.research_points >= GAME_CONSTANTS["PARAMETERS"]["RESEARCH_REQUIREMENTS"][s_type.upper()]
+
     def researched_wood(self) -> bool:
         """Returns: true: player has enough research points to collect the resource"""
         return self.research_points >= GAME_CONSTANTS["PARAMETERS"]["RESEARCH_REQUIREMENTS"]["WOOD"]
+
     def researched_coal(self) -> bool:
         """Returns: true: player has enough research points to collect the resource"""
         return self.research_points >= GAME_CONSTANTS["PARAMETERS"]["RESEARCH_REQUIREMENTS"]["COAL"]
+
     def researched_uranium(self) -> bool:
         """Returns: true: player has enough research points to collect the resource"""
         return self.research_points >= GAME_CONSTANTS["PARAMETERS"]["RESEARCH_REQUIREMENTS"]["URANIUM"]
+
+    def __str__(self) -> str:
+        return f"Player {self.research_points} | #cities {len(self.cities)} | #city tiles {self.city_tile_count} | #units {len(self.units)} | #workers {0} | #carts {0} |"
 
 
 class City:
@@ -159,13 +166,12 @@ class Unit:
         else:
             return GAME_CONSTANTS["PARAMETERS"]["RESOURCE_CAPACITY"]["CART"] - spaceused
     
-    def can_build(self, game_map) -> bool:
-        """
-        whether or not the unit can build where it is right now
-        """
+    def can_build(self, game_map : GameMap ) -> bool:
+        
         cell = game_map.get_cell_by_pos(self.pos)
         if not cell.has_resource() and self.can_act() and (self.cargo.wood + self.cargo.coal + self.cargo.uranium) >= GAME_CONSTANTS["PARAMETERS"]["CITY_BUILD_COST"]:
             return True
+
         return False
 
     def can_act(self) -> bool:
