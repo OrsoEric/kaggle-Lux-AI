@@ -83,8 +83,7 @@ def agent(observation, configuration):
                     # if the unit is a worker and we have space in cargo, lets find the nearest resource tile and try to mine it
                     for resource_tile in l_squares_with_resources:
                         if resource_tile.resource.type == Constants.RESOURCE_TYPES.WOOD:
-                            if not player.researched_wood():
-                                logging.debug(f"wood not researched")
+                            if not player.researched(resource_tile.resource.type):
                                 continue
                             else:
                                 dist = resource_tile.pos.distance_to(my_unit.pos)
@@ -142,7 +141,7 @@ def agent(observation, configuration):
 
     #iterate over all cities.
     for index, my_city in player.cities.items():
-        #a city is composed by many city tiles
+        #iterate over all city tiles that make up an individual city
         for my_city_tile in my_city.citytiles:
             #if the city can act
             if my_city_tile.can_act() == True:

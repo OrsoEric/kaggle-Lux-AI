@@ -1,3 +1,4 @@
+from agent import RESOURCE_TYPES
 import logging
 
 from typing import Dict
@@ -23,6 +24,20 @@ class Player:
         """dictionary of cities of the player."""
         self.city_tile_count = 0
         """total city tiles owned by the player. first factor for victory condition."""
+
+    def researched(self, s_type : str() ) -> bool:
+        """returns true if the resource is researched. logs an error if the type is not compatible
+        Args:
+            s_type (str): resource type
+        Returns:
+            bool: false: resource not researched or unknown | true: resource researched
+        """
+        #if resource type is unknown
+        if all( [s_type != RESOURCE_TYPES.WOOD, s_type != RESOURCE_TYPES.COAL, s_type != RESOURCE_TYPES.URANIUM] ):
+            logging.error(f"Unknown resource type: {s_type}")
+            return False
+        #return true if resource is known. the json constant file needs capital strings
+        return self.research_points >= GAME_CONSTANTS["PARAMETERS"]["RESEARCH_REQUIREMENTS"][s_type.upper()]
     def researched_wood(self) -> bool:
         """Returns: true: player has enough research points to collect the resource"""
         return self.research_points >= GAME_CONSTANTS["PARAMETERS"]["RESEARCH_REQUIREMENTS"]["WOOD"]
@@ -55,7 +70,6 @@ class City:
     def get_light_upkeep(self):
         """total light upkeep of the city"""
         return self.light_upkeep
-
 
 class CityTile:
     """Enumerates all attributes and actions of a CityTile"""
