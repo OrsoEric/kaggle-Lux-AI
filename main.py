@@ -1,3 +1,5 @@
+#lux-ai-2021 main.py main.py --out=replay.json
+
 #--------------------------------------------------------------------------------------------------------------------------------
 #   IMPORT
 #--------------------------------------------------------------------------------------------------------------------------------
@@ -19,6 +21,13 @@ from agent import agent
 #   if interpreter has the intent of executing this file
 if __name__ == "__main__":
 
+    logging.basicConfig(
+        #level of debug to show
+        level=logging.DEBUG,
+        #header of the debug message
+        format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
+    )
+
     def read_input():
         """fetch inputs from stdin
         Raises:
@@ -37,10 +46,6 @@ if __name__ == "__main__":
             Dict ([type]): [description]
         """
         def __init__(self, player=0) -> None:
-            """
-            Args:
-                player (int, optional): [description]. Defaults to 0.
-            """
             self.player = player
             # self.updates = []
             # self.step = 0

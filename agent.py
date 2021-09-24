@@ -6,6 +6,7 @@ Releases:
 """
 
 import math
+import logging
 #used to estimate resource use of the agent
 from time import perf_counter
 
@@ -72,42 +73,59 @@ def agent(observation, configuration):
 
     #iterate over all units
     for my_unit in player.units:
-        #handle workters
-        if my_unit.is_worker() and my_unit.can_act():
-            
-            if my_unit.get_cargo_space_left() > 0:
-                closest_dist = math.inf
-                closest_resource_tile = None
-                # if the unit is a worker and we have space in cargo, lets find the nearest resource tile and try to mine it
-                for resource_tile in l_squares_with_resources:
-                    if resource_tile.resource.type == Constants.RESOURCE_TYPES.COAL and not player.researched_wood():                    
-                        dist = resource_tile.pos.distance_to(my_unit.pos)
-                        if dist < closest_dist:
-                            closest_dist = dist
-                            closest_resource_tile = resource_tile
-                    elif resource_tile.resource.type == Constants.RESOURCE_TYPES.COAL and not player.researched_coal():
-                        continue
-                    elif resource_tile.resource.type == Constants.RESOURCE_TYPES.URANIUM and not player.researched_uranium():
-                        continue
-                    else:
-                        assert f"ERR: Unknown resource type {resource_tile}"
-                    
-                if closest_resource_tile is not None:
-                    actions.append( my_unit.move( my_unit.pos.direction_to( closest_resource_tile.pos ) ) )
-            else:
-                # if unit is a worker and there is no cargo space left, and we have cities, lets return to them
-                if len(player.cities) > 0:
+        #WORKER RULES
+        if my_unit.is_worker():
+            #Worker is out of cooldown
+            if my_unit.can_act():
+                if my_unit.get_cargo_space_left() > 0:
                     closest_dist = math.inf
-                    closest_city_tile = None
-                    for k, city in player.cities.items():
-                        for city_tile in city.citytiles:
-                            dist = city_tile.pos.distance_to(my_unit.pos)
-                            if dist < closest_dist:
-                                closest_dist = dist
-                                closest_city_tile = city_tile
-                    if closest_city_tile is not None:
-                        move_dir = my_unit.pos.direction_to(closest_city_tile.pos)
-                        actions.append(my_unit.move(move_dir))
+                    closest_resource_tile = None
+                    # if the unit is a worker and we have space in cargo, lets find the nearest resource tile and try to mine it
+                    for resource_tile in l_squares_with_resources:
+                        if resource_tile.resource.type == Constants.RESOURCE_TYPES.WOOD:
+                            if not player.researched_wood():
+                                logging.debug(f"wood not researched")
+                                continue
+                            else:
+                                dist = resource_tile.pos.distance_to(my_unit.pos)
+                                if dist < closest_dist:
+                                    closest_dist = dist
+                                    closest_resource_tile = resource_tile
+                        elif resource_tile.resource.type == Constants.RESOURCE_TYPES.COAL:
+                            if not player.researched_coal():
+                                continue
+                            else:
+                                continue
+                        elif resource_tile.resource.type == Constants.RESOURCE_TYPES.URANIUM:
+                            if not player.researched_uranium():
+                                continue
+                            else:
+                                continue
+                        #resource type is invalid. algorithmic error!
+                        else:
+                            logging.critical(f"Unknown resource {resource_tile}")
+                        
+                    if closest_resource_tile is not None:
+                        logging.debug(f"Resource {closest_resource_tile} found by worker {my_unit}")
+                        actions.append( my_unit.move( my_unit.pos.direction_to( closest_resource_tile.pos ) ) )
+                else:
+                    # if unit is a worker and there is no cargo space left, and we have cities, lets return to them
+                    if len(player.cities) > 0:
+                        closest_dist = math.inf
+                        closest_city_tile = None
+                        for k, city in player.cities.items():
+                            for city_tile in city.citytiles:
+                                dist = city_tile.pos.distance_to(my_unit.pos)
+                                if dist < closest_dist:
+                                    closest_dist = dist
+                                    closest_city_tile = city_tile
+                        if closest_city_tile is not None:
+                            logging.debug(f"Worker {my_unit} returning to city {closest_city_tile}")
+                            move_dir = my_unit.pos.direction_to(closest_city_tile.pos)
+                            actions.append(my_unit.move(move_dir))
+            #WORKER can't act
+            else:
+                pass
 
         #Handle carts
         elif my_unit.is_cart():
@@ -116,7 +134,7 @@ def agent(observation, configuration):
         #Default Case:
         else:
             #ERROR!!! Unknown unit
-            assert f"ERR: unit is unknown: {my_unit}"
+            logging.critical(f"Unit type is unknown: {my_unit}")
 
     #--------------------------------------------------------------------------------------------------------------------------------
     #   CITY RULES
@@ -129,6 +147,7 @@ def agent(observation, configuration):
             #if the city can act
             if my_city_tile.can_act() == True:
                 #have the city tile research
+                logging.debug(f"City {my_city_tile} does research")
                 actions.append( my_city_tile.research() )
 
     # you can add debug annotations using the functions in the annotate object

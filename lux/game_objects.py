@@ -1,4 +1,7 @@
+import logging
+
 from typing import Dict
+
 #import game constant and make them available to the program
 from lux.constants import Constants
 UNIT_TYPES = Constants.UNIT_TYPES
@@ -111,6 +114,7 @@ class Unit:
         self.cargo.wood = wood
         self.cargo.coal = coal
         self.cargo.uranium = uranium
+
     def is_worker(self) -> bool:
         """Returns true if the unit is a worker"""
         return self.type == UNIT_TYPES.WORKER
@@ -167,3 +171,6 @@ class Unit:
         return the command to pillage whatever is underneath the worker
         """
         return "p {}".format(self.id)
+
+    def __str__(self) -> str:
+        return f"Unit {self.pos} | Type: {self.type} | Cargo: {self.cargo} | CD: {self.cooldown}"

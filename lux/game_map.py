@@ -69,12 +69,15 @@ class Position:
 
 class Resource:
     """Enumerates the tyoe and amount of a resource"""
+
     def __init__(self, r_type: str, amount: int):
         self.type = r_type
         """type of the resource"""
         self.amount = amount
         """amount of the resource"""
 
+    def __str__(self) -> str:
+        return f"Resource | {self.type} | {self.amount}"
 
 class Cell:
     """Enumerates the content of a single square in the map"""
@@ -89,7 +92,17 @@ class Cell:
         """Road level of the tile"""
     def has_resource(self):
         return self.resource is not None and self.resource.amount > 0
-
+    def __str__(self) -> str:
+        #print position
+        s_tmp = f"Cell {self.pos} |"
+        #print resources, if any
+        if (self.resource != None):
+            s_tmp += f"{self.resource} |"
+        #print city if any
+        if (self.citytile != None):
+            s_tmp += f"{self.citytile} |"
+        s_tmp += f"Road: {self.road} |"
+        return s_tmp
 
 class GameMap:
     """Map stats. size, and list of cells"""
