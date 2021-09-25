@@ -1,6 +1,11 @@
 ## @package rule
 #	encapsulates the rules and methods to compute actions
 
+## @TODO
+#	worker with full inventory should move to nearest EMPTY and put down a city
+#	search_nearest( EMPTY )
+#	worker.can_build_city
+
 import math
 import logging
 from enum import Enum, auto
@@ -107,8 +112,9 @@ class Rule:
 			return x_resource_uranium
 
 		#an empty cell has no units, city tiles or resources
-		#elif ie_type == Rule.E_CELL_TYPE.EMPTY:
-			#return False
+		elif ie_type == Rule.E_CELL_TYPE.EMPTY:
+			#@TODO empty condition is more complex as it involves units
+			return not any([ x_citytile, x_resource ])
 		#default case
 		else:
 			logging.critical(f"TODO: Implement search type: {ie_type}")
@@ -180,6 +186,20 @@ class Rule:
 			else:
 				#search the nearest allied citytile to the worker
 				nearest_citytile_player = self.__search_nearest( self.c_map, Rule.E_CELL_TYPE.CITYTILE_PLAYER, ic_worker.pos )
+				#search the nearest empty tile where a city can be built
+				nearest_empty = self.__search_nearest( self.c_map, Rule.E_CELL_TYPE.EMPTY, ic_worker.pos )
+				#an empty tile exist
+				if nearest_empty != None:
+					#if worker is already on an empty tile
+					if nearest_empty.pos == ic_worker.pos:
+						#worker build citytile
+						logging.debug(f"Action Worker->Build City | Worker: {ic_worker}")
+						ls_worker_actions.append( ic_worker.build_city() )
+					else:
+						#worker moves to empty tile
+						logging.debug(f"Action Worker->Empty | Worker: {ic_worker} | Resource: {nearest_empty}")
+						ls_worker_actions.append( ic_worker.move( ic_worker.pos.direction_to( nearest_empty.pos ) ) )
+
 				#if citytile found exist
 				if nearest_citytile_player != None:
 					#move toward citytile
@@ -187,10 +207,7 @@ class Rule:
 					move_dir = ic_worker.pos.direction_to(nearest_citytile_player.pos)
 					ls_worker_actions.append( ic_worker.move( move_dir ) )
 
-				#worker satisfies the conditions to build a CityTile
-				if False: #ic_worker.can_build( game_state.map ):
-					logging.debug(f"Worker->Build City | Worker: {ic_worker}")
-					ls_worker_actions.append( ic_worker.build_city() )
+				
 
 		#WORKER can't act
 		else:
