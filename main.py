@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(
         #level of debug to show
-        level=logging.INFO,
+        level=logging.DEBUG,
         #header of the debug message
         format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
     )
@@ -65,8 +65,9 @@ if __name__ == "__main__":
         observation[INPUT_CONSTANTS.UPDATES].append(inputs)
         #Observations are being collected
         if step == 0:
+            #compute the ID of the player this agent is controlling
             player_id = int( observation[INPUT_CONSTANTS.UPDATES][0] )
-            observation.player = player_id
+            observation.player_id = player_id
 
         #When observations have been fully collected
         if inputs == INPUT_CONSTANTS.DONE:

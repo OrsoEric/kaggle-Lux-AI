@@ -63,8 +63,32 @@ def save_game_state( ic_game_state : Game(), is_file_name : str() ) -> bool:
     try:
         with open(is_file_name, "wb") as opened_file:
             pickle.dump( ic_game_state, opened_file )
+
     except OSError as problem:
         logging.critical(f"Pickle: {problem}")
+        return True
+
+    return False
+
+##  load a game state to file
+#   uses pickle
+def load_game_state( is_file_name : str() ) -> Game:
+    """load a game state to file
+    Args:
+        is_file_name (str): source file name 
+    Returns:
+        Game: loaded game state
+    """
+    
+    try:
+        with open(is_file_name, "rb") as opened_file:
+            ic_game_state = pickle.load( opened_file )
+
+    except OSError as problem:
+        logging.critical(f"Pickle: {problem}")
+        return None
+
+    return ic_game_state
 
 ##  agent function
 #   processes inputs into a Game() class
@@ -83,7 +107,7 @@ def agent(observation, configuration):
         game_state = Game()
         game_state._initialize(observation[INPUT_CONSTANTS.UPDATES])
         game_state._update(observation[INPUT_CONSTANTS.UPDATES][2:])
-        game_state.id = observation.player
+        game_state.id = observation.player_id
     else:
         game_state._update(observation[INPUT_CONSTANTS.UPDATES])
 
@@ -94,10 +118,10 @@ def agent(observation, configuration):
     #compute the size of the map.
     width, height = game_state.map.width, game_state.map.height
     #compute which player is assigned to this agent, and which player is assigned to the opponent's agent
-    player = game_state.players[observation.player]
-    opponent = game_state.players[(observation.player + 1) % 2]
+    player = game_state.players[game_state.id]
+    opponent = game_state.players[(game_state.id + 1) % 2]
 
-    logging.debug(f"Turn {game_state.turn} | {player}")
+    logging.debug(f"Turn {game_state.turn} | Player {game_state.id} {player}")
 
     #--------------------------------------------------------------------------------------------------------------------------------
     #   Agent Rule Processor

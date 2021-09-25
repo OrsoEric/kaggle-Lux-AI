@@ -7,6 +7,33 @@
 #--------------------------------------------------------------------------------------------------------------------------------
 
 import logging
+#pickle game state loader
+from agent import load_game_state
+
+#from agent import agent
+
+from rule import Rule
+
+#--------------------------------------------------------------------------------------------------------------------------------
+#   TEST BENCHES
+#--------------------------------------------------------------------------------------------------------------------------------
+
+##	test the test bench
+#	1) load a game state
+#	2) execute agent rule
+#	3) shows actions taken
+def test_test_bench() -> bool:
+
+    game_state = load_game_state( "pickle_dump_game_state.bin" )
+    if (game_state == None):
+        return True
+    #initialize rule processor with the game state
+    agent_rule_processor = Rule( game_state.map, player, opponent )
+    #ask the rule processor to come up with a list of actions
+    agent_actions = agent_rule_processor.compute_actions()
+    logging.debug(f"Actions: {agent_actions}")
+
+    return False    
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   MAIN
@@ -14,10 +41,11 @@ import logging
 
 #   if interpreter has the intent of executing this file
 if __name__ == "__main__":
-
+	#setup logging
     logging.basicConfig(
         #level of debug to show
-        level=logging.INFO,
+        level=logging.DEBUG,
         #header of the debug message
         format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
     )
+
