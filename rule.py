@@ -3,6 +3,8 @@
 
 import math
 import logging
+from enum import Enum, auto
+from pprint import pprint
 
 #efficient nested loops
 from itertools import product
@@ -17,6 +19,15 @@ from lux.game_objects import Unit
 
 
 class Rule:
+	#enumerate possible types of cell
+	class E_CELL_TARGET( Enum ):
+		EMPTY = auto(),
+		CITYTILE = auto(),
+		RESOURCE = auto(),
+		WOOD = auto(),
+		COAL = auto(),
+		URANIUM = auto()
+
 	def __init__(self, ic_map : GameMap, ic_player : Player, ic_opponent : Player ):
 		"""Initialize Rule processor by feeding it the game observations
 		Args:
@@ -55,10 +66,23 @@ class Rule:
 		#return list of Cell with resources on them
 		return lc_cells_with_resources
 
-	#search in a list of cells, the closest one to the given position
-	def __search_nearest( self, ic_position : Position, ilc_cells : list[Cell] ) -> Cell:
 
-		pass
+	def search_nearest( self, ic_map : GameMap, ie_target: E_CELL_TARGET , ic_position : Position ) -> Cell:
+		"""search the map for a cell of given characteristics nearest to a given position, if any are found
+		Args:
+		ic_map (GameMap): map where the search is conducted
+		is_target (str): content to search for. contained in the enum E_TARGETS
+		ic_position (Position): pivot position where search is conducted
+		Returns:
+		Cell: None=cell wasn't found | cell that satisfies the given conditions
+		"""
+
+		
+
+
+		
+
+	pass
 
 
 	def __compute_worker_actions(self, ic_player : Player, ic_worker : Unit ) -> list[str]:

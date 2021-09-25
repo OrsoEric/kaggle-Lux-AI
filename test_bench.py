@@ -7,12 +7,21 @@
 #--------------------------------------------------------------------------------------------------------------------------------
 
 import logging
+
 #pickle game state loader
 from agent import load_game_state
 
 #from agent import agent
 
 from rule import Rule
+
+#--------------------------------------------------------------------------------------------------------------------------------
+#   CONSTANTS(fake)
+#--------------------------------------------------------------------------------------------------------------------------------
+
+#executes the pickle load and Rule class vanilla
+TEST_TEST_BENCH = False
+TEST_RULE_SEARCH_NEAREST = True
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   TEST BENCHES
@@ -22,18 +31,35 @@ from rule import Rule
 #	1) load a game state
 #	2) execute agent rule
 #	3) shows actions taken
-def test_test_bench() -> bool:
+def test_test_bench( is_file_name ) -> bool:
+	#load game state
+	game_state = load_game_state( is_file_name )
+	if (game_state == None):
+		logging.critical(f"Failed to load")
+		return True
+	#initialize rule processor with the game state
+	agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
+	#ask the rule processor to come up with a list of actions
+	agent_actions = agent_rule_processor.compute_actions()
+	logging.debug(f"Actions: {agent_actions}")
 
-    game_state = load_game_state( "pickle_dump_game_state.bin" )
-    if (game_state == None):
-        return True
-    #initialize rule processor with the game state
-    agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
-    #ask the rule processor to come up with a list of actions
-    agent_actions = agent_rule_processor.compute_actions()
-    logging.debug(f"Actions: {agent_actions}")
+	return False
 
-    return False    
+def test_rule_search_nearest( is_file_name ) -> bool:
+	#load game state
+	game_state = load_game_state( is_file_name )
+	if (game_state == None):
+		logging.critical(f"Failed to load")
+		return True
+
+	#initialize rule processor with the game state
+	#agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
+
+	print(list(Rule.E_CELL_TARGET))
+	#agent_rule_processor.search_nearest( game_state.map, "", None )
+	
+
+	return False
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   MAIN
@@ -42,11 +68,15 @@ def test_test_bench() -> bool:
 #   if interpreter has the intent of executing this file
 if __name__ == "__main__":
 	#setup logging
-    logging.basicConfig(
-        #level of debug to show
-        level=logging.DEBUG,
-        #header of the debug message
-        format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
-    )
+	logging.basicConfig(
+		#level of debug to show
+		level=logging.DEBUG,
+		#header of the debug message
+		format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
+	)
 
-    test_test_bench()
+	if TEST_TEST_BENCH==True:
+		test_test_bench( "pickle_dump_game_state.bin" )
+
+	if TEST_RULE_SEARCH_NEAREST == True:
+		test_rule_search_nearest( "pickle_dump_game_state.bin" )
