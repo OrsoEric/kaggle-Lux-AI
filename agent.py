@@ -140,18 +140,8 @@ def agent(observation, configuration):
     #--------------------------------------------------------------------------------------------------------------------------------
     #   CITY RULES
     #--------------------------------------------------------------------------------------------------------------------------------
-    """
-    #iterate over all cities.
-    for index, my_city in player.cities.items():
-        #iterate over all city tiles that make up an individual city
-        for my_city_tile in my_city.citytiles:
-            #if the city can act
-            if my_city_tile.can_act() == True:
-                #have the city tile research
-                logging.debug(f"Research: {my_city_tile}")
-                actions.append( my_city_tile.research() )
-
+	
     # you can add debug annotations using the functions in the annotate object
     # actions.append(annotate.circle(0, 0))
-    """
+
     return agent_actions

@@ -14,7 +14,7 @@ RESOURCE_TYPES = Constants.RESOURCE_TYPES
 
 from lux.game_map import GameMap, Position
 from lux.game_map import Cell
-from lux.game_objects import Player
+from lux.game_objects import City, Player
 from lux.game_objects import Unit
 
 
@@ -116,7 +116,7 @@ class Rule:
 
 		return False
 
-	def search_nearest( self, ic_map : GameMap, ie_target: E_CELL_TYPE , ic_position : Position ) -> Cell:
+	def __search_nearest( self, ic_map : GameMap, ie_target: E_CELL_TYPE , ic_position : Position ) -> Cell:
 		"""search the map for a cell of given characteristics nearest to a given position, if any are found
 		Args:
 		ic_map (GameMap): map where the search is conducted
@@ -163,27 +163,27 @@ class Rule:
 				nearest_resource_cell = None
 				#search the closest researched resource tile for collection
 				if ( ic_player.researched(RESOURCE_TYPES.URANIUM) ):
-					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TYPE.URANIUM, ic_worker.pos )
+					nearest_resource_cell = self.__search_nearest( self.c_map, Rule.E_CELL_TYPE.URANIUM, ic_worker.pos )
 				elif ( ic_player.researched(RESOURCE_TYPES.COAL) ):
-					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TYPE.COAL, ic_worker.pos )
+					nearest_resource_cell = self.__search_nearest( self.c_map, Rule.E_CELL_TYPE.COAL, ic_worker.pos )
 				elif ( ic_player.researched(RESOURCE_TYPES.WOOD) ):
-					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TYPE.WOOD, ic_worker.pos )
+					nearest_resource_cell = self.__search_nearest( self.c_map, Rule.E_CELL_TYPE.WOOD, ic_worker.pos )
 				else:
 					logging.critical(f"No resource is researched. Collection impossible.")
 				#if a resource cell has been found
 				if nearest_resource_cell is not None:
 					#move toward resource
-					logging.debug(f"Worker->Resource | Worker: {ic_worker} | Resource: {nearest_resource_cell}")
+					logging.debug(f"Action Worker->Resource | Worker: {ic_worker} | Resource: {nearest_resource_cell}")
 					ls_worker_actions.append( ic_worker.move( ic_worker.pos.direction_to( nearest_resource_cell.pos ) ) )
 
 			#worker cargo is full
 			else:
 				#search the nearest allied citytile to the worker
-				nearest_citytile_player = self.search_nearest( self.c_map, Rule.E_CELL_TYPE.CITYTILE_PLAYER, ic_worker.pos )
+				nearest_citytile_player = self.__search_nearest( self.c_map, Rule.E_CELL_TYPE.CITYTILE_PLAYER, ic_worker.pos )
 				#if citytile found exist
 				if nearest_citytile_player != None:
 					#move toward citytile
-					logging.debug(f"Worker->City Tile | Worker: {ic_worker} | CityTile {nearest_citytile_player}")
+					logging.debug(f"Action Worker->City Tile | Worker: {ic_worker} | CityTile {nearest_citytile_player}")
 					move_dir = ic_worker.pos.direction_to(nearest_citytile_player.pos)
 					ls_worker_actions.append( ic_worker.move( move_dir ) )
 
@@ -192,36 +192,24 @@ class Rule:
 					logging.debug(f"Worker->Build City | Worker: {ic_worker}")
 					ls_worker_actions.append( ic_worker.build_city() )
 
-				
-				"""
-				#player has cities left
-				elif len(ic_player.cities) > 0:
-					#search for the closest city
-					closest_dist = math.inf
-					closest_city_tile = None
-					for k, city in ic_player.cities.items():
-						for city_tile in city.citytiles:
-							dist = city_tile.pos.distance_to(ic_worker.pos)
-							if dist < closest_dist:
-								closest_dist = dist
-								closest_city_tile = city_tile
-					if closest_city_tile is not None:
-						logging.debug(f"Worker->City Tile | Worker: {ic_worker} | CityTile {closest_city_tile}")
-						move_dir = ic_worker.pos.direction_to(closest_city_tile.pos)
-						ls_worker_actions.append(ic_worker.move(move_dir))
-
-				#worker unable to build and player has no cities left
-				else:
-					#TODO move the worker where he can put down a new city
-					pass
-				"""
-
 		#WORKER can't act
 		else:
 			pass
 
 		return ls_worker_actions
 	
+	def __compute_city_actions( self, ic_player_city : City ) -> list[str]:
+		#initialize list of city actions
+		ls_city_actions = list()
+		#iterate over all city tiles that make up an individual city
+		for my_city_tile in ic_player_city.citytiles:
+			#if the city can act
+			if my_city_tile.can_act() == True:
+				#ACTION: have the city tile research
+				logging.debug(f"Action Research: {my_city_tile}")
+				ls_city_actions.append( my_city_tile.research() )
+		return ls_city_actions
+
 	def compute_actions( self ) -> list():
 
 		#iterate over all units
@@ -240,7 +228,10 @@ class Rule:
 				#ERROR!!! Unknown unit
 				logging.critical(f"Unit type is unknown: {my_unit}")
 
-
+		#iterate over all cities owned by the player
+		for s_city, c_city in self.c_player.cities.items():
+			#compute and add the actions of this worker to the list of actions
+			self.ls_actions += self.__compute_city_actions( c_city )
 
 		return self.ls_actions
 
