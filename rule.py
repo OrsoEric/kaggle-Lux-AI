@@ -201,7 +201,7 @@ class Rule:
 						ls_worker_actions.append( ic_worker.move( ic_worker.pos.direction_to( nearest_empty.pos ) ) )
 
 				#if citytile found exist
-				if nearest_citytile_player != None:
+				elif nearest_citytile_player != None:
 					#move toward citytile
 					logging.debug(f"Action Worker->City Tile | Worker: {ic_worker} | CityTile {nearest_citytile_player}")
 					move_dir = ic_worker.pos.direction_to(nearest_citytile_player.pos)

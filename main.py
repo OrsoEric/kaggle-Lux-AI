@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(
         #level of debug to show
-        level=logging.DEBUG,
+        level=logging.INFO,
         #header of the debug message
         format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
     )
@@ -79,3 +79,21 @@ if __name__ == "__main__":
             #??? Probably a final action to close the list of actions of this agent
             print(",".join(actions))
             print("D_FINISH")
+
+"""
+File \"/opt/conda/lib/python3.7/site-packages/kaggle_environments/agent.py\", line 50, in get_last_callable\n    
+exec(code_object, env)\n  File \"/kaggle_simulations/agent/main.py\", line 15, in <module>\n    from agent import agent\n  
+File \"/kaggle_simulations/agent/agent.py\", line 36, in <module>\n    
+from rule import Rule\n  File \"/kaggle_simulations/agent/rule.py\", line 26, in <module>\n    
+class Rule:\n  File \"/kaggle_simulations/agent/rule.py\", line 154, in Rule\n    
+def __compute_worker_actions(self, ic_player : Player, ic_worker : Unit ) -> list[str]:\n
+TypeError: 'type' object is not subscriptable\n
+\n
+During handling of the above exception, another exception occurred:\n
+\n
+Traceback (most recent call last):\n  
+File \"/opt/conda/lib/python3.7/site-packages/kaggle_environments/agent.py\", line 157, in act\n
+	action = self.agent(*args)\n  
+File \"/opt/conda/lib/python3.7/site-packages/kaggle_environments/agent.py\", line 123, in callable_agent\n
+agent = get_last_callable(raw_agent, path=raw) "
+"""
