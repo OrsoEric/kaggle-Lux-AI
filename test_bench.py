@@ -28,7 +28,7 @@ def test_test_bench() -> bool:
     if (game_state == None):
         return True
     #initialize rule processor with the game state
-    agent_rule_processor = Rule( game_state.map, player, opponent )
+    agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
     #ask the rule processor to come up with a list of actions
     agent_actions = agent_rule_processor.compute_actions()
     logging.debug(f"Actions: {agent_actions}")
@@ -49,3 +49,4 @@ if __name__ == "__main__":
         format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
     )
 
+    test_test_bench()

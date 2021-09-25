@@ -40,7 +40,7 @@ from rule import Rule
 #--------------------------------------------------------------------------------------------------------------------------------
 
 #True: save the game state at first turn with pickle
-X_PICKLE_SAVE_GAME_STATE = False
+X_PICKLE_SAVE_GAME_STATE = True
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   IMPORTS
@@ -102,12 +102,12 @@ def agent(observation, configuration):
 
     global game_state
 
-    ### Do not edit ###
     if observation[INPUT_CONSTANTS.STEP] == 0:
         game_state = Game()
         game_state._initialize(observation[INPUT_CONSTANTS.UPDATES])
         game_state._update(observation[INPUT_CONSTANTS.UPDATES][2:])
-        game_state.id = observation.player_id
+        game_state._set_player_id( observation.player_id )
+
     else:
         game_state._update(observation[INPUT_CONSTANTS.UPDATES])
 
@@ -119,7 +119,7 @@ def agent(observation, configuration):
     width, height = game_state.map.width, game_state.map.height
     #compute which player is assigned to this agent, and which player is assigned to the opponent's agent
     player = game_state.players[game_state.id]
-    opponent = game_state.players[(game_state.id + 1) % 2]
+    opponent = game_state.players[game_state.opponent_id]
 
     logging.debug(f"Turn {game_state.turn} | Player {game_state.id} {player}")
 
@@ -128,7 +128,7 @@ def agent(observation, configuration):
     #--------------------------------------------------------------------------------------------------------------------------------
 
     #during the first turn, save the game state to file
-    if ((game_state.turn == 1) and (X_PICKLE_SAVE_GAME_STATE == True)):
+    if ((game_state.turn == 0) and (X_PICKLE_SAVE_GAME_STATE == True)):
         save_game_state( game_state, "pickle_dump_game_state.bin" )
 
     #initialize rule processor with the game state

@@ -1,9 +1,13 @@
+import logging
+
 #import game constant and make them available to the program
 from lux.constants import Constants
 INPUT_CONSTANTS = Constants.INPUT_CONSTANTS
 
 from lux.game_map import GameMap
-from lux.game_objects import Player, Unit, City, CityTile
+from lux.game_objects import Player
+from lux.game_objects import Unit
+from lux.game_objects import City
 
 class Game:
     def _initialize(self, messages):
@@ -89,3 +93,21 @@ class Game:
                 y = int(strs[2])
                 road = float(strs[3])
                 self.map.get_cell(x, y).road = road
+
+    def _set_player_id( self, in_player_id ) -> bool:
+        """Tells the game state whichplayer is being controlled by the agent
+        Args:
+            in_player_id (number): ID of the palyer the agent is controlling
+        Returns:
+            bool: False: success | True: fails because ID is out of range
+        """
+        if ((in_player_id < 0) or (in_player_id > 1)):
+            logging.critical(f"Invalid player ID: {in_player_id}")
+            return True
+
+        self.id = in_player_id
+        """ID of the player the agent is controlling"""
+        self.opponent_id = (in_player_id+1)%2
+        """ID of the player the opponent is controlling"""
+
+        return False
