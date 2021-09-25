@@ -113,7 +113,7 @@ class CityTile:
         return "bc {} {}".format(self.pos.x, self.pos.y)
 
     def __str__(self) -> str:
-        return f"CityTile {self.pos} | CD: {self.cooldown}"
+        return f"CityTile {self.pos} | Player {self.team} | CD: {self.cooldown}"
 
 class Cargo:
     """Enumerates resources stored"""

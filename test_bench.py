@@ -7,6 +7,7 @@
 #--------------------------------------------------------------------------------------------------------------------------------
 
 import logging
+from lux.game_map import Position
 
 #pickle game state loader
 from agent import load_game_state
@@ -20,8 +21,8 @@ from rule import Rule
 #--------------------------------------------------------------------------------------------------------------------------------
 
 #executes the pickle load and Rule class vanilla
-TEST_TEST_BENCH = False
-TEST_RULE_SEARCH_NEAREST = True
+TEST_TEST_BENCH = True
+TEST_RULE_SEARCH_NEAREST = False
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   TEST BENCHES
@@ -53,10 +54,19 @@ def test_rule_search_nearest( is_file_name ) -> bool:
 		return True
 
 	#initialize rule processor with the game state
-	#agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
+	agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
 
-	print(list(Rule.E_CELL_TARGET))
-	#agent_rule_processor.search_nearest( game_state.map, "", None )
+	print("Test search cell type method")
+	print(agent_rule_processor.search_nearest( game_state.map, Rule.E_CELL_TARGET.ANY, Position(0,0) ))
+	print(agent_rule_processor.search_nearest( game_state.map, Rule.E_CELL_TARGET.ANY, Position(6,8) ))
+	print(agent_rule_processor.search_nearest( game_state.map, Rule.E_CELL_TARGET.CITYTILE, Position(6,8) ))
+	print(agent_rule_processor.search_nearest( game_state.map, Rule.E_CELL_TARGET.CITYTILE_PLAYER, Position(6,8) ))
+	print(agent_rule_processor.search_nearest( game_state.map, Rule.E_CELL_TARGET.CITYTILE_OPPONENT, Position(6,8) ))
+	print(agent_rule_processor.search_nearest( game_state.map, Rule.E_CELL_TARGET.RESOURCE, Position(6,8) ))
+	print(agent_rule_processor.search_nearest( game_state.map, Rule.E_CELL_TARGET.COAL, Position(3,2) ))
+	print(agent_rule_processor.search_nearest( game_state.map, Rule.E_CELL_TARGET.URANIUM, Position(3,2) ))
+	print(agent_rule_processor.search_nearest( game_state.map, Rule.E_CELL_TARGET.WOOD, Position(3,2) ))
+	#print(agent_rule_processor.search_nearest( game_state.map, Rule.E_CELL_TARGET.EMPTY, Position(3,2) ))
 	
 
 	return False

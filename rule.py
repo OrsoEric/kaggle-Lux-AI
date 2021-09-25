@@ -21,8 +21,11 @@ from lux.game_objects import Unit
 class Rule:
 	#enumerate possible types of cell
 	class E_CELL_TARGET( Enum ):
+		ANY = auto(),
 		EMPTY = auto(),
 		CITYTILE = auto(),
+		CITYTILE_PLAYER = auto(),
+		CITYTILE_OPPONENT = auto(),
 		RESOURCE = auto(),
 		WOOD = auto(),
 		COAL = auto(),
@@ -67,6 +70,71 @@ class Rule:
 		return lc_cells_with_resources
 
 
+	def __is_cell_type( self, ic_cell : Cell, ie_type : E_CELL_TARGET ) -> bool:
+
+		x_resource = False
+		x_resource_wood = False
+		x_resource_coal = False
+		x_resource_uranium = False
+		#cell has resources
+		if ic_cell.has_resource() == False:
+			pass
+		else:
+			x_resource = True
+			if ( ic_cell.resource.is_type(RESOURCE_TYPES.WOOD) ):
+				x_resource_wood = True
+			elif ( ic_cell.resource.is_type(RESOURCE_TYPES.COAL) ):
+				x_resource_coal = True
+			elif ( ic_cell.resource.is_type(RESOURCE_TYPES.URANIUM) ):
+				x_resource_uranium = True
+			else:
+				logging.critical(f"invalid Resource Type {ic_cell.resource}")
+				return False
+
+		#cell has a city. differentiate ownership
+		x_citytile = False
+		x_citytile_player = False
+		x_citytile_opponent = False
+		if (ic_cell.citytile == None):
+			pass
+		else:
+			x_citytile = True
+			if ic_cell.citytile.team == self.c_player.team:
+				x_citytile_player = True
+			elif ic_cell.citytile.team == self.c_opponent.team:
+				x_citytile_opponent = True
+			else:
+				logging.critical(f"invalid CityTile team {ic_cell.citytile.team} {self.c_player.team} {self.c_opponent.team}")
+				return False
+
+		#any cell will match ANY
+		if ie_type == Rule.E_CELL_TARGET.ANY:
+			return True
+		elif ie_type == Rule.E_CELL_TARGET.CITYTILE:
+			return x_citytile
+		elif ie_type == Rule.E_CELL_TARGET.CITYTILE_PLAYER:
+			return x_citytile_player
+		elif ie_type == Rule.E_CELL_TARGET.CITYTILE_OPPONENT:
+			return x_citytile_opponent
+		elif ie_type == Rule.E_CELL_TARGET.RESOURCE:
+			return x_resource
+		elif ie_type == Rule.E_CELL_TARGET.WOOD:
+			return x_resource_wood
+		elif ie_type == Rule.E_CELL_TARGET.COAL:
+			return x_resource_coal
+		elif ie_type == Rule.E_CELL_TARGET.URANIUM:
+			return x_resource_uranium
+
+		#an empty cell has no units, city tiles or resources
+		#elif ie_type == Rule.E_CELL_TARGET.EMPTY:
+			#return False
+		#default case
+		else:
+			logging.critical(f"TODO: Implement search type: {ie_type}")
+			return False
+
+		return False
+
 	def search_nearest( self, ic_map : GameMap, ie_target: E_CELL_TARGET , ic_position : Position ) -> Cell:
 		"""search the map for a cell of given characteristics nearest to a given position, if any are found
 		Args:
@@ -77,12 +145,23 @@ class Rule:
 		Cell: None=cell wasn't found | cell that satisfies the given conditions
 		"""
 
-		
-
-
-		
-
-	pass
+		#initialize search
+		nearest_dist = math.inf
+		nearest_cell = None
+		#scan every 2D coordinate on the map
+		for w, h in product( range( ic_map.width ), range( ic_map.height ) ):
+			#compute the content of the cell at the given coordinate
+			c_cell = ic_map.get_cell( w, h )
+			#if i found a cell of the right characteristics
+			if ( self.__is_cell_type( c_cell, ie_target ) ):
+				#if the cell is the nearest yet
+				n_distance = c_cell.pos.distance_to( ic_position )
+				if (n_distance < nearest_dist):
+					#i found a closer cell of the right type
+					nearest_dist = n_distance
+					nearest_cell = c_cell
+		#return the nearest cell, if any
+		return nearest_cell
 
 
 	def __compute_worker_actions(self, ic_player : Player, ic_worker : Unit ) -> list[str]:
@@ -100,7 +179,24 @@ class Rule:
 		if ic_worker.can_act():
 			#worker can collect more resources
 			if ic_worker.get_cargo_space_left() > 0:
+				nearest_resource_cell = None
+				#search the closest researched resource tile for collection
+				if ( ic_player.researched(RESOURCE_TYPES.URANIUM) ):
+					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TARGET.URANIUM, ic_worker.pos )
+				elif ( ic_player.researched(RESOURCE_TYPES.COAL) ):
+					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TARGET.COAL, ic_worker.pos )
+				elif ( ic_player.researched(RESOURCE_TYPES.WOOD) ):
+					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TARGET.WOOD, ic_worker.pos )
+				else:
+					logging.critical(f"No resource is researched. Collection impossible.")
+				#if a resource cell has been found
+				if nearest_resource_cell is not None:
+					#move toward resource
+					logging.debug(f"Worker->Resource | Worker: {ic_worker} | Resource: {nearest_resource_cell}")
+					ls_worker_actions.append( ic_worker.move( ic_worker.pos.direction_to( nearest_resource_cell.pos ) ) )
 
+
+				"""
 				closest_dist = math.inf
 				closest_resource_tile = None
 				# if the unit is a worker and we have space in cargo, lets find the nearest resource tile and try to mine it
@@ -124,6 +220,7 @@ class Rule:
 				if closest_resource_tile is not None:
 					logging.debug(f"Worker->Resource | Worker: {ic_worker} | Resource: {closest_resource_tile}")
 					ls_worker_actions.append( ic_worker.move( ic_worker.pos.direction_to( closest_resource_tile.pos ) ) )
+				"""
 			#worker cargo is full
 			else:
 				#worker satisfies the conditions to build a CityTile
