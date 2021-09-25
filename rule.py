@@ -71,7 +71,13 @@ class Rule:
 
 
 	def __is_cell_type( self, ic_cell : Cell, ie_type : E_CELL_TYPE ) -> bool:
-
+		"""returns True if a given cell is of a given type
+		Args:
+			ic_cell (Cell): cell under test
+			ie_type (E_CELL_TYPE): cell type enum Rule.E_CELL_TYPE
+		Returns:
+			bool: False: error or cell doesn't match E_CELL_TYPE | True: cell matches E_CELL_TYPE
+		"""
 		x_resource = False
 		x_resource_wood = False
 		x_resource_coal = False
@@ -195,39 +201,24 @@ class Rule:
 					logging.debug(f"Worker->Resource | Worker: {ic_worker} | Resource: {nearest_resource_cell}")
 					ls_worker_actions.append( ic_worker.move( ic_worker.pos.direction_to( nearest_resource_cell.pos ) ) )
 
-
-				"""
-				closest_dist = math.inf
-				closest_resource_tile = None
-				# if the unit is a worker and we have space in cargo, lets find the nearest resource tile and try to mine it
-				for resource_tile in self.__lc_resource_cells:
-					if resource_tile.resource.type == RESOURCE_TYPES.WOOD:
-						if not ic_player.researched(resource_tile.resource.type):
-							continue
-						else:
-							dist = resource_tile.pos.distance_to(ic_worker.pos)
-							if dist < closest_dist:
-								closest_dist = dist
-								closest_resource_tile = resource_tile
-					elif resource_tile.resource.type == RESOURCE_TYPES.COAL:
-						continue
-					elif resource_tile.resource.type == RESOURCE_TYPES.URANIUM:
-						continue
-					#resource type is invalid. algorithmic error!
-					else:
-						logging.critical(f"Unknown resource {resource_tile}")
-					
-				if closest_resource_tile is not None:
-					logging.debug(f"Worker->Resource | Worker: {ic_worker} | Resource: {closest_resource_tile}")
-					ls_worker_actions.append( ic_worker.move( ic_worker.pos.direction_to( closest_resource_tile.pos ) ) )
-				"""
 			#worker cargo is full
 			else:
+				#search the nearest allied citytile to the worker
+				nearest_citytile_player = self.search_nearest( self.c_map, Rule.E_CELL_TYPE.CITYTILE_PLAYER, ic_worker.pos )
+				#if citytile found exist
+				if nearest_citytile_player != None:
+					#move toward citytile
+					logging.debug(f"Worker->City Tile | Worker: {ic_worker} | CityTile {nearest_citytile_player}")
+					move_dir = ic_worker.pos.direction_to(nearest_citytile_player.pos)
+					ls_worker_actions.append( ic_worker.move( move_dir ) )
+
 				#worker satisfies the conditions to build a CityTile
 				if False: #ic_worker.can_build( game_state.map ):
 					logging.debug(f"Worker->Build City | Worker: {ic_worker}")
 					ls_worker_actions.append( ic_worker.build_city() )
 
+				
+				"""
 				#player has cities left
 				elif len(ic_player.cities) > 0:
 					#search for the closest city
@@ -248,6 +239,7 @@ class Rule:
 				else:
 					#TODO move the worker where he can put down a new city
 					pass
+				"""
 
 		#WORKER can't act
 		else:
