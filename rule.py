@@ -20,7 +20,7 @@ from lux.game_objects import Unit
 
 class Rule:
 	#enumerate possible types of cell
-	class E_CELL_TARGET( Enum ):
+	class E_CELL_TYPE( Enum ):
 		ANY = auto(),
 		EMPTY = auto(),
 		CITYTILE = auto(),
@@ -70,7 +70,7 @@ class Rule:
 		return lc_cells_with_resources
 
 
-	def __is_cell_type( self, ic_cell : Cell, ie_type : E_CELL_TARGET ) -> bool:
+	def __is_cell_type( self, ic_cell : Cell, ie_type : E_CELL_TYPE ) -> bool:
 
 		x_resource = False
 		x_resource_wood = False
@@ -108,25 +108,25 @@ class Rule:
 				return False
 
 		#any cell will match ANY
-		if ie_type == Rule.E_CELL_TARGET.ANY:
+		if ie_type == Rule.E_CELL_TYPE.ANY:
 			return True
-		elif ie_type == Rule.E_CELL_TARGET.CITYTILE:
+		elif ie_type == Rule.E_CELL_TYPE.CITYTILE:
 			return x_citytile
-		elif ie_type == Rule.E_CELL_TARGET.CITYTILE_PLAYER:
+		elif ie_type == Rule.E_CELL_TYPE.CITYTILE_PLAYER:
 			return x_citytile_player
-		elif ie_type == Rule.E_CELL_TARGET.CITYTILE_OPPONENT:
+		elif ie_type == Rule.E_CELL_TYPE.CITYTILE_OPPONENT:
 			return x_citytile_opponent
-		elif ie_type == Rule.E_CELL_TARGET.RESOURCE:
+		elif ie_type == Rule.E_CELL_TYPE.RESOURCE:
 			return x_resource
-		elif ie_type == Rule.E_CELL_TARGET.WOOD:
+		elif ie_type == Rule.E_CELL_TYPE.WOOD:
 			return x_resource_wood
-		elif ie_type == Rule.E_CELL_TARGET.COAL:
+		elif ie_type == Rule.E_CELL_TYPE.COAL:
 			return x_resource_coal
-		elif ie_type == Rule.E_CELL_TARGET.URANIUM:
+		elif ie_type == Rule.E_CELL_TYPE.URANIUM:
 			return x_resource_uranium
 
 		#an empty cell has no units, city tiles or resources
-		#elif ie_type == Rule.E_CELL_TARGET.EMPTY:
+		#elif ie_type == Rule.E_CELL_TYPE.EMPTY:
 			#return False
 		#default case
 		else:
@@ -135,7 +135,7 @@ class Rule:
 
 		return False
 
-	def search_nearest( self, ic_map : GameMap, ie_target: E_CELL_TARGET , ic_position : Position ) -> Cell:
+	def search_nearest( self, ic_map : GameMap, ie_target: E_CELL_TYPE , ic_position : Position ) -> Cell:
 		"""search the map for a cell of given characteristics nearest to a given position, if any are found
 		Args:
 		ic_map (GameMap): map where the search is conducted
@@ -182,11 +182,11 @@ class Rule:
 				nearest_resource_cell = None
 				#search the closest researched resource tile for collection
 				if ( ic_player.researched(RESOURCE_TYPES.URANIUM) ):
-					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TARGET.URANIUM, ic_worker.pos )
+					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TYPE.URANIUM, ic_worker.pos )
 				elif ( ic_player.researched(RESOURCE_TYPES.COAL) ):
-					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TARGET.COAL, ic_worker.pos )
+					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TYPE.COAL, ic_worker.pos )
 				elif ( ic_player.researched(RESOURCE_TYPES.WOOD) ):
-					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TARGET.WOOD, ic_worker.pos )
+					nearest_resource_cell = self.search_nearest( self.c_map, Rule.E_CELL_TYPE.WOOD, ic_worker.pos )
 				else:
 					logging.critical(f"No resource is researched. Collection impossible.")
 				#if a resource cell has been found
