@@ -44,31 +44,6 @@ class Rule:
 		self.c_opponent = ic_opponent
 		#actions
 		self.ls_actions = list()
-		#processed observations
-		self.__lc_resource_cells = self.__search_resource_cells( self.c_map )
-		self.__lc_buildable_cells = list()
-
-	def __search_resource_cells(self, ic_map : GameMap ) -> list[Cell]:
-		"""
-		Args: search the map for cells with resources on them. Returns them as a list.
-			self(Rule): self
-			c_map(GameMap): map where the search is executed
-		Returns:
-			list(Cell): list of Cell with resources on them
-		"""
-		#initialize a list of squares with resources to empty
-		lc_cells_with_resources: list[Cell] = list()
-		#scan every 2D coordinate on the map
-		for w, h in product( range( ic_map.width ), range( ic_map.height ) ):
-			#compute the content of the cell at the given coordinate
-			c_cell = ic_map.get_cell( w, h )
-			#if the square has resources on it
-			if c_cell.has_resource():
-				#add the square to the list of squares with resouces
-				lc_cells_with_resources.append( c_cell )
-		#return list of Cell with resources on them
-		return lc_cells_with_resources
-
 
 	def __is_cell_type( self, ic_cell : Cell, ie_type : E_CELL_TYPE ) -> bool:
 		"""returns True if a given cell is of a given type
