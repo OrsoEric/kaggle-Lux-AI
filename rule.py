@@ -10,7 +10,7 @@ from itertools import product
 from lux.constants import Constants
 RESOURCE_TYPES = Constants.RESOURCE_TYPES
 
-from lux.game_map import GameMap
+from lux.game_map import GameMap, Position
 from lux.game_map import Cell
 from lux.game_objects import Player
 from lux.game_objects import Unit
@@ -55,15 +55,28 @@ class Rule:
 		#return list of Cell with resources on them
 		return lc_cells_with_resources
 
-	def __compute_worker_actions(self, ic_player : Player, ic_worker : Unit ) -> list():
+	#search in a list of cells, the closest one to the given position
+	def __search_nearest( self, ic_position : Position, ilc_cells : list[Cell] ) -> Cell:
 
+		pass
+
+
+	def __compute_worker_actions(self, ic_player : Player, ic_worker : Unit ) -> list[str]:
+		"""compute the actions a single worker will take
+		Args:
+			self (Rule): self
+			ic_player (Player): player that owns the worker
+			ic_worker (Unit): worker for which actions are to be computed
+		Returns:
+			list[str]: list of actions
+		"""
 		#initialize worker actions 
 		ls_worker_actions = list()
-
 		#Worker is out of cooldown
 		if ic_worker.can_act():
 			#worker can collect more resources
 			if ic_worker.get_cargo_space_left() > 0:
+
 				closest_dist = math.inf
 				closest_resource_tile = None
 				# if the unit is a worker and we have space in cargo, lets find the nearest resource tile and try to mine it

@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(
         #level of debug to show
-        level=logging.DEBUG,
+        level=logging.INFO,
         #header of the debug message
         format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
     )

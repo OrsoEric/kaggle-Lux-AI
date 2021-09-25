@@ -3,9 +3,16 @@
 Releases:
 2021-09-22a BOT0 - IDLE BOT     : Default RULE based agent that uses the starting worker to collect resources
 2021-09-23a BOT2 - RESEARCH BOT : Agent now launches research action when city can use an action. Code cleanup
+2021-09-24a Move rules to Rule.py Rule class
+2021-09-25
 """
 
+#--------------------------------------------------------------------------------------------------------------------------------
+#   IMPORTS
+#--------------------------------------------------------------------------------------------------------------------------------
+
 import math
+import pickle
 import logging
 #used to estimate resource use of the agent
 from time import perf_counter
@@ -28,10 +35,47 @@ from lux import annotate
 #Import the rule processor for the rule based agent
 from rule import Rule
 
-#???
+#--------------------------------------------------------------------------------------------------------------------------------
+#   CONSTANTS(fake)
+#--------------------------------------------------------------------------------------------------------------------------------
+
+#True: save the game state at first turn with pickle
+X_PICKLE_SAVE_GAME_STATE = False
+
+#--------------------------------------------------------------------------------------------------------------------------------
+#   IMPORTS
+#--------------------------------------------------------------------------------------------------------------------------------
+
+#Game() class that holds all processed observations
 game_state = None
 
+##  save a game state to file
+#   uses pickle
+def save_game_state( ic_game_state : Game(), is_file_name : str() ) -> bool:
+    """save a game state to file
+    Args:
+        ic_game_state (Game): game state to be saved
+        is_file_name (str): destination file name 
+    Returns:
+        bool: false: success | true: fail
+    """
+    
+    try:
+        with open(is_file_name, "wb") as opened_file:
+            pickle.dump( ic_game_state, opened_file )
+    except OSError as problem:
+        logging.critical(f"Pickle: {problem}")
+
+##  agent function
+#   processes inputs into a Game() class
+#   launches execution of Rule processor
+#   returns actions
 def agent(observation, configuration):
+
+    #--------------------------------------------------------------------------------------------------------------------------------
+    #   Process input observations into a Game() class
+    #--------------------------------------------------------------------------------------------------------------------------------
+
     global game_state
 
     ### Do not edit ###
@@ -55,123 +99,24 @@ def agent(observation, configuration):
 
     logging.debug(f"Turn {game_state.turn} | {player}")
 
-    #list of actions the agent is going to send to the game engine. initialize to NOP
-    #actions = list()
-
     #--------------------------------------------------------------------------------------------------------------------------------
     #   Agent Rule Processor
     #--------------------------------------------------------------------------------------------------------------------------------
 
-    if (game_state.turn >= 0):
-        #initialize rule processor with the game state
-        agent_rule_processor = Rule( game_state.map, player, opponent )
-        #ask the rule processor to come up with a list of actions
-        agent_actions = agent_rule_processor.compute_actions()
-    else:
-        agent_actions = list()
+    #during the first turn, save the game state to file
+    if ((game_state.turn == 1) and (X_PICKLE_SAVE_GAME_STATE == True)):
+        save_game_state( game_state, "pickle_dump_game_state.bin" )
 
+    #initialize rule processor with the game state
+    agent_rule_processor = Rule( game_state.map, player, opponent )
+    #ask the rule processor to come up with a list of actions
+    agent_actions = agent_rule_processor.compute_actions()
     logging.debug(f"Actions: {agent_actions}")
-
-    #--------------------------------------------------------------------------------------------------------------------------------
-    #   Find all squares with resouces
-    #--------------------------------------------------------------------------------------------------------------------------------
-    """
-    #initialize a list of squares with resources to empty
-    l_squares_with_resources: list[Cell] = list()
-    #scan every 2D coordinate on the map
-    for x, y in product( range(width), range(height) ):
-        #compute the content of the square at the given coordinate
-        my_cell = game_state.map.get_cell( x, y )
-        #if the square has resources on it
-        if my_cell.has_resource():
-            #add the square to the list of squares with resouces
-            l_squares_with_resources.append( my_cell )
-
-    #--------------------------------------------------------------------------------------------------------------------------------
-    #   WORKER RULES
-    #--------------------------------------------------------------------------------------------------------------------------------
-    
-    #iterate over all units
-    for my_unit in player.units:
-        #WORKER RULES
-        if my_unit.is_worker():
-            #Worker is out of cooldown
-            if my_unit.can_act():
-                #worker can collect more resources
-                if my_unit.get_cargo_space_left() > 0:
-                    closest_dist = math.inf
-                    closest_resource_tile = None
-                    # if the unit is a worker and we have space in cargo, lets find the nearest resource tile and try to mine it
-                    for resource_tile in l_squares_with_resources:
-                        if resource_tile.resource.type == Constants.RESOURCE_TYPES.WOOD:
-                            if not player.researched(resource_tile.resource.type):
-                                continue
-                            else:
-                                dist = resource_tile.pos.distance_to(my_unit.pos)
-                                if dist < closest_dist:
-                                    closest_dist = dist
-                                    closest_resource_tile = resource_tile
-                        elif resource_tile.resource.type == Constants.RESOURCE_TYPES.COAL:
-                            if not player.researched(resource_tile.resource.type):
-                                continue
-                            else:
-                                continue
-                        elif resource_tile.resource.type == Constants.RESOURCE_TYPES.URANIUM:
-                            if not player.researched(resource_tile.resource.type):
-                                continue
-                            else:
-                                continue
-                        #resource type is invalid. algorithmic error!
-                        else:
-                            logging.critical(f"Unknown resource {resource_tile}")
-                        
-                    if closest_resource_tile is not None:
-                        logging.debug(f"Worker->Resource | Worker: {my_unit} | Resource: {closest_resource_tile}")
-                        actions.append( my_unit.move( my_unit.pos.direction_to( closest_resource_tile.pos ) ) )
-                #worker cargo is full
-                else:
-                    #worker satisfies the conditions to build a CityTile
-                    if my_unit.can_build( game_state.map ):
-                        logging.debug(f"Worker->Build City | Worker: {my_unit}")
-                        actions.append( my_unit.build_city() )
-
-                    #player has cities left
-                    elif len(player.cities) > 0:
-                        #search for the closest city
-                        closest_dist = math.inf
-                        closest_city_tile = None
-                        for k, city in player.cities.items():
-                            for city_tile in city.citytiles:
-                                dist = city_tile.pos.distance_to(my_unit.pos)
-                                if dist < closest_dist:
-                                    closest_dist = dist
-                                    closest_city_tile = city_tile
-                        if closest_city_tile is not None:
-                            logging.debug(f"Worker->City Tile | Worker: {my_unit} | CityTile {closest_city_tile}")
-                            move_dir = my_unit.pos.direction_to(closest_city_tile.pos)
-                            actions.append(my_unit.move(move_dir))
-                    #worker unable to build and player has no cities left
-                    else:
-                        #TODO move the worker where he can put down a new city
-                        pass
-
-            #WORKER can't act
-            else:
-                pass
-
-        #Handle carts
-        elif my_unit.is_cart():
-            pass
-
-        #Default Case:
-        else:
-            #ERROR!!! Unknown unit
-            logging.critical(f"Unit type is unknown: {my_unit}")
 
     #--------------------------------------------------------------------------------------------------------------------------------
     #   CITY RULES
     #--------------------------------------------------------------------------------------------------------------------------------
-
+    """
     #iterate over all cities.
     for index, my_city in player.cities.items():
         #iterate over all city tiles that make up an individual city
