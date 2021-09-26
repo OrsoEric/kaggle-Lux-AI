@@ -151,7 +151,7 @@ class Rule:
 		return nearest_cell
 
 
-	def __compute_worker_actions(self, ic_player : Player, ic_worker : Unit ) -> list[str]:
+	def __compute_worker_actions(self, ic_player : Player, ic_worker : Unit ) -> list:
 		"""compute the actions a single worker will take
 		Args:
 			self (Rule): self
@@ -215,7 +215,7 @@ class Rule:
 
 		return ls_worker_actions
 	
-	def __compute_city_actions( self, ic_player_city : City ) -> list[str]:
+	def __compute_city_actions( self, ic_player_city : City ) -> list:
 		#initialize list of city actions
 		ls_city_actions = list()
 		#iterate over all city tiles that make up an individual city
