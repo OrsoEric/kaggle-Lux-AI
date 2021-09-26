@@ -39,7 +39,8 @@ def test_test_bench( is_file_name ) -> bool:
 		logging.critical(f"Failed to load")
 		return True
 	#initialize rule processor with the game state
-	agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
+	#agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
+	agent_rule_processor = Rule( game_state )
 	#ask the rule processor to come up with a list of actions
 	agent_actions = agent_rule_processor.compute_actions()
 	logging.debug(f"Actions: {agent_actions}")
@@ -54,7 +55,8 @@ def test_rule_search_nearest( is_file_name ) -> bool:
 		return True
 
 	#initialize rule processor with the game state
-	agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
+	#agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
+	agent_rule_processor = Rule( game_state )
 
 	print("Test search cell type method")
 	"""

@@ -1,4 +1,8 @@
-#lux-ai-2021 main.py main.py --out=replay.json 
+#	Useful:
+#		Execute BOT
+#	lux-ai-2021 main.py main.py --out=replay.json 
+#		See replay in action
+#	https://2021vis.lux-ai.org/
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   IMPORT

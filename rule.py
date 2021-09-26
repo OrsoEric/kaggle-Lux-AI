@@ -6,10 +6,13 @@
 #	search_nearest( EMPTY )
 #	worker.can_build_city
 
+#--------------------------------------------------------------------------------------------------------------------------------
+#   IMPORTS
+#--------------------------------------------------------------------------------------------------------------------------------
+
 import math
 import logging
 from enum import Enum, auto
-from pprint import pprint
 
 #efficient nested loops
 from itertools import product
@@ -17,11 +20,18 @@ from itertools import product
 from lux.constants import Constants
 RESOURCE_TYPES = Constants.RESOURCE_TYPES
 
-from lux.game_map import GameMap, Position
+from lux.game import Game
+from lux.game_map import GameMap
+from lux.game_map import Position
 from lux.game_map import Cell
 from lux.game_objects import City, Player
 from lux.game_objects import Unit
 
+from lux import annotate
+
+#--------------------------------------------------------------------------------------------------------------------------------
+#   CLASS Rule
+#--------------------------------------------------------------------------------------------------------------------------------
 
 class Rule:
 	#enumerate possible types of cell
@@ -36,17 +46,15 @@ class Rule:
 		COAL = auto(),
 		URANIUM = auto()
 
-	def __init__(self, ic_map : GameMap, ic_player : Player, ic_opponent : Player ):
-		"""Initialize Rule processor by feeding it the game observations
+	def __init__(self, ic_game_state : Game ):
+		"""Initialize Rule processor by feeding it the game state
 		Args:
-			ic_map (GameMap): Map
-			ic_player (Player): Player the agent is playing as
-			ic_opponent (Player): Player the agent is playing against
+			ic_game_state (Game): current game state
 		"""
 		#observations
-		self.c_map = ic_map
-		self.c_player = ic_player
-		self.c_opponent = ic_opponent
+		self.c_map = ic_game_state.map
+		self.c_player = ic_game_state.players[ ic_game_state.id ]
+		self.c_opponent = ic_game_state.players[ ic_game_state.opponent_id ]
 		#actions
 		self.ls_actions = list()
 
@@ -181,6 +189,9 @@ class Rule:
 					#move toward resource
 					logging.debug(f"Action Worker->Resource | Worker: {ic_worker} | Resource: {nearest_resource_cell}")
 					ls_worker_actions.append( ic_worker.move( ic_worker.pos.direction_to( nearest_resource_cell.pos ) ) )
+					#annotate mission
+					ls_worker_actions.append( annotate.target( nearest_resource_cell.pos ) )
+					ls_worker_actions.append( annotate.line( ic_worker.pos, nearest_resource_cell.pos ) )
 
 			#worker cargo is full
 			else:
@@ -195,10 +206,15 @@ class Rule:
 						#worker build citytile
 						logging.debug(f"Action Worker->Build City | Worker: {ic_worker}")
 						ls_worker_actions.append( ic_worker.build_city() )
+						#annotate mission
+						ls_worker_actions.append( annotate.circle( ic_worker.pos ) )
 					else:
 						#worker moves to empty tile
 						logging.debug(f"Action Worker->Empty | Worker: {ic_worker} | Resource: {nearest_empty}")
 						ls_worker_actions.append( ic_worker.move( ic_worker.pos.direction_to( nearest_empty.pos ) ) )
+						#annotate mission
+						ls_worker_actions.append( annotate.target( nearest_empty.pos ) )
+						ls_worker_actions.append( annotate.line( ic_worker.pos, nearest_empty.pos ) )
 
 				#if citytile found exist
 				elif nearest_citytile_player != None:
@@ -206,8 +222,9 @@ class Rule:
 					logging.debug(f"Action Worker->City Tile | Worker: {ic_worker} | CityTile {nearest_citytile_player}")
 					move_dir = ic_worker.pos.direction_to(nearest_citytile_player.pos)
 					ls_worker_actions.append( ic_worker.move( move_dir ) )
-
-				
+					#annotate mission
+					ls_worker_actions.append( annotate.target( nearest_citytile_player.pos ) )
+					ls_worker_actions.append( annotate.line( ic_worker.pos, nearest_citytile_player.pos ) )
 
 		#WORKER can't act
 		else:
@@ -216,6 +233,12 @@ class Rule:
 		return ls_worker_actions
 	
 	def __compute_city_actions( self, ic_player_city : City ) -> list:
+		"""Execute rule and generate actions for a single city
+		Args:
+			ic_player_city (City): target city
+		Returns:
+			list: list of string actions
+		"""
 		#initialize list of city actions
 		ls_city_actions = list()
 		#iterate over all city tiles that make up an individual city
@@ -225,10 +248,17 @@ class Rule:
 				#ACTION: have the city tile research
 				logging.debug(f"Action Research: {my_city_tile}")
 				ls_city_actions.append( my_city_tile.research() )
+				#annoitate mission
+				ls_city_actions.append( annotate.circle( my_city_tile.pos ) )
 		return ls_city_actions
 
 	def compute_actions( self ) -> list():
-
+		"""Execute rules and return a list of actions
+		Args:
+			self ([type]): self
+		Returns:
+			list[str]: list of str actions
+		"""
 		#iterate over all units
 		for my_unit in self.c_player.units:
 			#WORKER RULES
@@ -251,6 +281,3 @@ class Rule:
 			self.ls_actions += self.__compute_city_actions( c_city )
 
 		return self.ls_actions
-
-
-
