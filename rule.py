@@ -20,6 +20,7 @@ from itertools import product
 from lux.constants import Constants
 RESOURCE_TYPES = Constants.RESOURCE_TYPES
 
+from lux.game import Game
 from lux.game_map import GameMap
 from lux.game_map import Position
 from lux.game_map import Cell
@@ -45,17 +46,15 @@ class Rule:
 		COAL = auto(),
 		URANIUM = auto()
 
-	def __init__(self, ic_map : GameMap, ic_player : Player, ic_opponent : Player ):
-		"""Initialize Rule processor by feeding it the game observations
+	def __init__(self, ic_game_state : Game ):
+		"""Initialize Rule processor by feeding it the game state
 		Args:
-			ic_map (GameMap): Map
-			ic_player (Player): Player the agent is playing as
-			ic_opponent (Player): Player the agent is playing against
+			ic_game_state (Game): current game state
 		"""
 		#observations
-		self.c_map = ic_map
-		self.c_player = ic_player
-		self.c_opponent = ic_opponent
+		self.c_map = ic_game_state.map
+		self.c_player = ic_game_state.players[ ic_game_state.id ]
+		self.c_opponent = ic_game_state.players[ ic_game_state.opponent_id ]
 		#actions
 		self.ls_actions = list()
 
@@ -282,6 +281,3 @@ class Rule:
 			self.ls_actions += self.__compute_city_actions( c_city )
 
 		return self.ls_actions
-
-
-

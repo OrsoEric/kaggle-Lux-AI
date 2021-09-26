@@ -90,45 +90,43 @@ def load_game_state( is_file_name : str() ) -> Game:
 #	DO NOT CHANGE THE INTERFACE!!! Locally execution is from main.py, on kaggle agent() is called directly
 def agent( observation , configurations ):
 
-    #--------------------------------------------------------------------------------------------------------------------------------
-    #   Process input observations into a Game() class
-    #--------------------------------------------------------------------------------------------------------------------------------
+	#--------------------------------------------------------------------------------------------------------------------------------
+	#   Process input observations into a Game() class
+	#--------------------------------------------------------------------------------------------------------------------------------
 
-    global game_state
+	global game_state
 
-    if observation[INPUT_CONSTANTS.STEP] == 0:
-        game_state = Game()
-        game_state._initialize(observation[INPUT_CONSTANTS.UPDATES])
-        game_state._update(observation[INPUT_CONSTANTS.UPDATES][2:])
-        game_state._set_player_id( observation.player )
+	if observation[INPUT_CONSTANTS.STEP] == 0:
+		game_state = Game()
+		game_state._initialize(observation[INPUT_CONSTANTS.UPDATES])
+		game_state._update(observation[INPUT_CONSTANTS.UPDATES][2:])
+		game_state._set_player_id( observation.player )
 
-    else:
-        game_state._update(observation[INPUT_CONSTANTS.UPDATES])
+	else:
+		game_state._update(observation[INPUT_CONSTANTS.UPDATES])
 
-    #--------------------------------------------------------------------------------------------------------------------------------
-    #   Game wide parameters
-    #--------------------------------------------------------------------------------------------------------------------------------
+	#--------------------------------------------------------------------------------------------------------------------------------
+	#   Game wide parameters
+	#--------------------------------------------------------------------------------------------------------------------------------
 
-    #compute which player is assigned to this agent, and which player is assigned to the opponent's agent
-    player = game_state.players[game_state.id]
-    opponent = game_state.players[game_state.opponent_id]
-    logging.debug(f"Turn {game_state.turn} | Player {game_state.id} {player}")
+	#compute which player is assigned to this agent, and which player is assigned to the opponent's agent
+	player = game_state.players[game_state.id]
+	opponent = game_state.players[game_state.opponent_id]
+	logging.debug(f"Turn {game_state.turn} | Player {game_state.id} {player}")
 
-    #--------------------------------------------------------------------------------------------------------------------------------
-    #   Agent Rule Processor
-    #--------------------------------------------------------------------------------------------------------------------------------
+	#--------------------------------------------------------------------------------------------------------------------------------
+	#   Agent Rule Processor
+	#--------------------------------------------------------------------------------------------------------------------------------
 
-    #during the first turn, save the game state to file
-    if ((game_state.turn == 0) and (X_PICKLE_SAVE_GAME_STATE == True)):
-        save_game_state( game_state, "pickle_dump_game_state.bin" )
+	#during the first turn, save the game state to file
+	if ((game_state.turn == 0) and (X_PICKLE_SAVE_GAME_STATE == True)):
+		save_game_state( game_state, "pickle_dump_game_state.bin" )
 
-    #initialize rule processor with the game state
-    agent_rule_processor = Rule( game_state.map, player, opponent )
-    #ask the rule processor to come up with a list of actions
-    agent_actions = agent_rule_processor.compute_actions()
-    logging.debug(f"Actions: {agent_actions}")
-	
-    # you can add debug annotations using the functions in the annotate object
-    # actions.append(annotate.circle(0, 0))
-	
-    return agent_actions
+	#initialize rule processor with the game state
+	#agent_rule_processor = Rule( game_state.map, player, opponent )
+	agent_rule_processor = Rule( game_state )
+	#ask the rule processor to come up with a list of actions
+	agent_actions = agent_rule_processor.compute_actions()
+	logging.debug(f"Actions: {agent_actions}")
+
+	return agent_actions
