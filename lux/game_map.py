@@ -45,9 +45,7 @@ class Position:
             return Position(self.x, self.y)
 
     def direction_to(self, target_pos: 'Position') -> DIRECTIONS:
-        """
-        Return closest position to target_pos from this position
-        """
+        """Return closest position to target_pos from this position"""
         check_dirs = [
             DIRECTIONS.NORTH,
             DIRECTIONS.EAST,
@@ -68,16 +66,19 @@ class Position:
         return f"({self.x}, {self.y})"
 
 class Resource:
-    """Enumerates the tyoe and amount of a resource"""
+	"""Enumerates the type and amount of a resource"""
 
-    def __init__(self, r_type: str, amount: int):
-        self.type = r_type
-        """type of the resource"""
-        self.amount = amount
-        """amount of the resource"""
+	def __init__(self, r_type: str, amount: int):
+		self.type = r_type
+		"""type of the resource"""
+		self.amount = amount
+		"""amount of the resource"""
 
-    def __str__(self) -> str:
-        return f"Resource | {self.type} | {self.amount}"
+	def is_type( self, is_type : str ) -> bool:
+		return self.type == is_type
+
+	def __str__(self) -> str:
+		return f"Resource | {self.type} | {self.amount}"
 
 class Cell:
     """Enumerates the content of a single square in the map"""
@@ -90,8 +91,10 @@ class Cell:
         """Citytile on the square, if any"""
         self.road = 0
         """Road level of the tile"""
+
     def has_resource(self):
         return self.resource is not None and self.resource.amount > 0
+
     def __str__(self) -> str:
         #print position
         s_tmp = f"Cell {self.pos} |"
