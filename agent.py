@@ -94,6 +94,7 @@ def load_game_state( is_file_name : str() ) -> Game:
 #   processes inputs into a Game() class
 #   launches execution of Rule processor
 #   returns actions
+#	DO NOT CHANGE THE INTERFACE!!! Locally execution is from main.py, on kaggle agent() is called directly
 def agent( observation , configurations ):
 
     #--------------------------------------------------------------------------------------------------------------------------------
