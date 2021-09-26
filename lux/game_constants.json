@@ -20,11 +20,11 @@
     "NIGHT_LENGTH": 10,
     "MAX_DAYS": 360,
     "LIGHT_UPKEEP": {
-      "CITY": 23,
+      "CITY": 30,
       "WORKER": 4,
       "CART": 10
     },
-    "WOOD_GROWTH_RATE": 1.025,
+    "WOOD_GROWTH_RATE": 1.01,
     "MAX_WOOD_AMOUNT": 500,
     "CITY_BUILD_COST": 100,
     "CITY_ADJACENCY_BONUS": 5,
@@ -43,7 +43,6 @@
       "URANIUM": 40
     },
     "RESEARCH_REQUIREMENTS": {
-      "WOOD": 0,
       "COAL": 50,
       "URANIUM": 200
     },
@@ -54,7 +53,7 @@
     },
     "MAX_ROAD": 6,
     "MIN_ROAD": 0,
-    "CART_ROAD_DEVELOPMENT_RATE": 0.75,
+    "CART_ROAD_DEVELOPMENT_RATE": 0.5,
     "PILLAGE_RATE": 0.5
   }
 }

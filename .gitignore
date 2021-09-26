@@ -1,4 +1,2 @@
-errorlogs/
 __pycache__/
-lux/__pycache__/
-pickle_dump_game_state.bin
+*.pyc
