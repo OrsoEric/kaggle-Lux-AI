@@ -21,7 +21,9 @@ import logging
 #enumeration support
 from enum import Enum, auto
 #LUX-AI-2021
+from lux.constants import GAME_CONSTANTS
 from lux.game import Game
+
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   Perception
@@ -30,11 +32,6 @@ from lux.game import Game
 class Perception():
 
     #----------------    Configurations    ----------------
-    
-    #class E_GAME_LIMITS( Enum ):
-    MAP_WIDTH_MAX = 32
-    MAP_HEIGHT_MAX = 32
-    TURN_MAX = 360
 
     #Turn number
     #turn inside the day cylce
@@ -127,7 +124,7 @@ class Perception():
         self._game = ic_game_state
         #initialize perception matricies
         self.mats = None
-
+        logging.debug(f" {GAME_CONSTANTS['MAP']['WIDTH_MAX']} ")
         return
 
     #----------------    Overloads    ---------------

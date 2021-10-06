@@ -5,11 +5,12 @@ from typing import Dict
 
 #import game constant and make them available to the program
 from lux.constants import Constants
+from lux.constants import GAME_CONSTANTS
 UNIT_TYPES = Constants.UNIT_TYPES
 
 from lux.game_map import Position
 from lux.game_map import GameMap
-from lux.game_constants import GAME_CONSTANTS
+
 
 class Player:
     """ Encapsulates all player relevant objects, like units, cities and research points.
