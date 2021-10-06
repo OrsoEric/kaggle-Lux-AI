@@ -1,4 +1,10 @@
 {
+  "MAP":{
+    "WIDTH_MIN": 12,
+    "HEIGHT_MIN": 12,
+    "WIDTH_MAX": 32,
+    "HEIGHT_MAX": 32
+  },
   "UNIT_TYPES": {
     "WORKER": 0,
     "CART": 1
