@@ -5,6 +5,7 @@ Releases:
 2021-09-23a BOT2 - RESEARCH BOT : Agent now launches research action when city can use an action. Code cleanup
 2021-09-24a Move rules to Rule.py Rule class
 2021-09-25
+2021-10-10 
 """
 
 #--------------------------------------------------------------------------------------------------------------------------------

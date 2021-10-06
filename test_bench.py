@@ -24,8 +24,13 @@ import pprint
 #--------------------------------------------------------------------------------------------------------------------------------
 
 #executes the pickle load and Rule class vanilla
-TEST_TEST_BENCH = True
+TEST_TEST_BENCH = False
 TEST_RULE_SEARCH_NEAREST = False
+
+#----------------    Big No Brainer    ---------------
+
+#depickle a game state, and test the construction of a perception
+TEST_BIGNOBRAINER_PERCEPTION = True
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   TEST BENCHES
@@ -78,6 +83,33 @@ def test_rule_search_nearest( is_file_name ) -> bool:
 	return False
 
 #--------------------------------------------------------------------------------------------------------------------------------
+#   BIG NO BRAINER
+#--------------------------------------------------------------------------------------------------------------------------------
+
+from big_no_brainer import Perception
+def test_big_no_brainer_perception( is_file_name : str ) -> bool:
+	"""Test the creation of a perception class for the Big No Brainer NN Agent
+	Args:
+		is_file_name (str): name of the pickled game state
+	Returns:
+		bool: False = OK | True = Fail 
+	"""
+
+	#load game state
+	c_game_state = load_game_state( is_file_name )
+	if (c_game_state is None):
+		logging.critical(f"Failed to load game state >{is_file_name}<")
+		return True
+
+	#try to generate a Perception class
+	c_perception = Perception( c_game_state )
+
+	logging.debug( c_perception )
+
+	return False
+
+
+#--------------------------------------------------------------------------------------------------------------------------------
 #   MAIN
 #--------------------------------------------------------------------------------------------------------------------------------
 
@@ -96,3 +128,7 @@ if __name__ == "__main__":
 
 	if TEST_RULE_SEARCH_NEAREST == True:
 		test_rule_search_nearest( "pickle_dump_game_state.bin" )
+
+	if TEST_BIGNOBRAINER_PERCEPTION==True:
+		test_big_no_brainer_perception( "pickle_dump_game_state.bin" )
+
