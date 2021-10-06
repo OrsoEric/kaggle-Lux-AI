@@ -17,9 +17,9 @@
 #--------------------------------------------------------------------------------------------------------------------------------
 
 import logging
-
 #enumeration support
 from enum import Enum, auto
+import numpy as np
 #LUX-AI-2021
 from lux.constants import GAME_CONSTANTS
 from lux.game import Game
@@ -121,10 +121,15 @@ class Perception():
             ic_game_state (Game): Current game state
         """
         #store locally the game state. Not visible from outside
-        self._game = ic_game_state
+        self._c_map = ic_game_state.map
+        self._c_own = ic_game_state.players[ ic_game_state.id ]
+        self._c_enemy = ic_game_state.players[ ic_game_state.opponent_id ]
+
         #initialize perception matricies
-        self.mats = None
-        logging.debug(f" {GAME_CONSTANTS['MAP']['WIDTH_MAX']} ")
+        self.mats = np.zeros( (20, GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
+        #fill the perception matrix
+        self.invalid = self._generate_perception()
+
         return
 
     #----------------    Overloads    ---------------
@@ -150,8 +155,22 @@ class Perception():
             bool: False=OK | True=FAIL
         """
         
+        for c_city in self._c_own.cities:
+            pass
+
+
         return False
 
+    def _generate_perception( self ) -> bool:
+        """Runs the generation of all perception matricies
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+        
+        if self._generate_citytile_fuel_matrix():
+            return True
+
+        return False
 
     #----------------    Public    ---------------
 
