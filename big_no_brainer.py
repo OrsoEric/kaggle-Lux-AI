@@ -19,11 +19,12 @@
 import logging
 #enumeration support
 from enum import Enum, auto
+
 import numpy as np
+
 #LUX-AI-2021
 from lux.constants import GAME_CONSTANTS
 from lux.game import Game
-
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   Perception
@@ -203,4 +204,34 @@ class Perception():
 
         return
 
+#--------------------------------------------------------------------------------------------------------------------------------
+#   Save Heatmaps
+#--------------------------------------------------------------------------------------------------------------------------------
 
+#plot
+import matplotlib.pyplot as plt
+import seaborn as sns
+#convert input matricies into .gif
+import matplotlib.animation as animation
+
+def save_list_perception( ilc_list_perception : list, is_filename : str ):
+
+    fig = plt.figure()
+    dimension = (32, 32)
+    data = np.random.rand(dimension[0], dimension[1])
+    sns.heatmap(data, center=0, vmin=-100, vmax=100)
+
+    def init():
+        plt.clf()
+        sns.heatmap(np.zeros(dimension), center=0, vmin=-100, vmax=100 )
+
+    def animate(i):
+        plt.clf()
+        c_data = ilc_list_perception[i].mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value[0] ]
+        #data = np.random.rand(dimension[0], dimension[1])
+        sns.heatmap(c_data, center=0, vmin=-100, vmax=100 )
+
+    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(ilc_list_perception), repeat=False)
+    anim.save( is_filename, writer='pillow', fps=2)
+    
+    return

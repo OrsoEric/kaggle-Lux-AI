@@ -9,10 +9,12 @@
 import logging
 
 import numpy as np
-#convert input matricies into .gif
+#plot
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import seaborn as sns
+#convert input matricies into .gif
+import matplotlib.animation as animation
+
 
 from lux.game_map import Position
 
@@ -119,7 +121,7 @@ def test_big_no_brainer_perception( is_file_name : str ) -> bool:
 
 	return False
 
-
+from big_no_brainer import save_list_perception
 def test_big_no_brainer_perception_animation( ils_file_name : list ) -> bool:
 	"""Test the creation of a perception class for the Big No Brainer NN Agent
 	Load from a given list of gamestates
@@ -134,6 +136,7 @@ def test_big_no_brainer_perception_animation( ils_file_name : list ) -> bool:
 
 	#allocate list of perceptions
 	lc_data = list()
+	lc_perception = list()
 
 	for s_file_name in ils_file_name:
 		#load game state
@@ -146,10 +149,15 @@ def test_big_no_brainer_perception_animation( ils_file_name : list ) -> bool:
 
 		#try to generate a Perception class
 		c_perception = Perception( c_game_state )
-		c_data = c_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value[0] ]
-		lc_data.append( c_data )
+		#c_data = c_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value[0] ]
+		#lc_data.append( c_data )
+		lc_perception.append( c_perception )
 		#plt.show()
+	
+	#from a list of perceptions, generate heatmaps of the input matricies and save them as animated gifs
+	save_list_perception( lc_perception, "ciytile_fuel.gif" )
 
+	"""
 	fig = plt.figure()
 	dimension = (32, 32)
 	data = np.random.rand(dimension[0], dimension[1])
@@ -166,7 +174,7 @@ def test_big_no_brainer_perception_animation( ils_file_name : list ) -> bool:
 
 	anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(lc_data), repeat=False)
 	anim.save( "citytile_fuel.gif", writer='pillow', fps=2)
-
+	"""
 	return False
 
 #--------------------------------------------------------------------------------------------------------------------------------

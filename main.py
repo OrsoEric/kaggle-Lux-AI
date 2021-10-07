@@ -17,6 +17,10 @@ from lux.constants import Constants
 INPUT_CONSTANTS = Constants.INPUT_CONSTANTS
 #AI agent
 from agent import agent
+from lux.game import Game
+
+from big_no_brainer import Perception
+from big_no_brainer import save_list_perception
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   MAIN
@@ -59,11 +63,17 @@ if __name__ == "__main__":
 	observation = Observation()
 	observation[INPUT_CONSTANTS.UPDATES] = []
 	observation[INPUT_CONSTANTS.STEP] = 0
+	
+	#parallel states used to print game state as gifs
+	gif_game_state = None
+	lc_gif_perception = list()
+
 	#while init
 	step = 0
 	player = 0
 	#forever
 	while True:
+		#logging.info(f"XXX {step} {player}")
 		#the game will send environment data via stdin
 		inputs = read_input()
 		#add game engine input observation to the observations
@@ -77,10 +87,17 @@ if __name__ == "__main__":
 		#When observations have been fully collected
 		if inputs == INPUT_CONSTANTS.DONE:
 			#ask the agent for a list of actions based on observations
-			actions = agent( observation, None )
+			actions, c_perception = agent( observation, None )
+			#append perception to list of perceptions
+			lc_gif_perception.append(c_perception)
 			observation["updates"] = []
 			step += 1
 			observation["step"] = step
 			#inform the game engine that actions are done.
 			print(",".join(actions))
 			print("D_FINISH")
+		
+		if (step==360):
+			save_list_perception( lc_gif_perception, f"citytile_fuel{gif_game_state.id}.gif")
+
+

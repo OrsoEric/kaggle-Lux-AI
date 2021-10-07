@@ -29,6 +29,8 @@ from lux.game import Game
 #Import the rule processor for the rule based agent
 from rule import Rule
 
+from big_no_brainer import Perception
+
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONSTANTS(fake)
 #--------------------------------------------------------------------------------------------------------------------------------
@@ -130,4 +132,4 @@ def agent( observation , configurations ):
 	agent_actions = agent_rule_processor.compute_actions()
 	logging.debug(f"Actions: {agent_actions}")
 
-	return agent_actions
+	return agent_actions, Perception(game_state)
