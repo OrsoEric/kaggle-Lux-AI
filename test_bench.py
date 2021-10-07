@@ -7,6 +7,13 @@
 #--------------------------------------------------------------------------------------------------------------------------------
 
 import logging
+
+import numpy as np
+#convert input matricies into .gif
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import seaborn as sns
+
 from lux.game_map import Position
 
 #pickle game state loader
@@ -15,8 +22,7 @@ from agent import load_game_state
 #from agent import agent
 from rule import Rule
 
-import matplotlib.pyplot as plt
-import seaborn as sns
+from big_no_brainer import Perception
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONSTANTS(fake)
@@ -29,7 +35,8 @@ TEST_RULE_SEARCH_NEAREST = False
 #----------------    Big No Brainer    ---------------
 
 #depickle a game state, and test the construction of a perception
-TEST_BIGNOBRAINER_PERCEPTION = True
+TEST_BIGNOBRAINER_PERCEPTION = False
+TEST_BIGNOBRAINER_PERCEPTION_ANIMATED = True
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   TEST BENCHES
@@ -85,7 +92,7 @@ def test_rule_search_nearest( is_file_name ) -> bool:
 #   BIG NO BRAINER
 #--------------------------------------------------------------------------------------------------------------------------------
 
-from big_no_brainer import Perception
+
 def test_big_no_brainer_perception( is_file_name : str ) -> bool:
 	"""Test the creation of a perception class for the Big No Brainer NN Agent
 	Args:
@@ -107,11 +114,60 @@ def test_big_no_brainer_perception( is_file_name : str ) -> bool:
 
 	logging.debug( c_perception )
 
-	sns.heatmap(c_perception.mats[0])
-	plt.show()
+	#sns.heatmap( c_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value[0] ], center=0 )
+	#plt.show()
 
 	return False
 
+
+def test_big_no_brainer_perception_animation( ils_file_name : list ) -> bool:
+	"""Test the creation of a perception class for the Big No Brainer NN Agent
+	Load from a given list of gamestates
+	Save on a gif an animation of the heatmaps
+	Args:
+		is_file_name (str): name of the pickled game state
+	Returns:
+		bool: False = OK | True = Fail 
+	"""
+
+	logging.info(f"Game states: {ils_file_name}")
+
+	#allocate list of perceptions
+	lc_data = list()
+
+	for s_file_name in ils_file_name:
+		#load game state
+		c_game_state = load_game_state( s_file_name )
+		#boilerplate game was a different API
+		c_game_state.opponent_id = 1-c_game_state.id
+		if (c_game_state is None):
+			logging.critical(f"Failed to load game state >{s_file_name}<")
+			return True
+
+		#try to generate a Perception class
+		c_perception = Perception( c_game_state )
+		c_data = c_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value[0] ]
+		lc_data.append( c_data )
+		#plt.show()
+
+	fig = plt.figure()
+	dimension = (32, 32)
+	data = np.random.rand(dimension[0], dimension[1])
+	sns.heatmap(data, center=0, vmin=-100, vmax=100)
+
+	def init():
+		plt.clf()
+		sns.heatmap(np.zeros(dimension), center=0, vmin=-100, vmax=100 )
+
+	def animate(i):
+		plt.clf()
+		#data = np.random.rand(dimension[0], dimension[1])
+		sns.heatmap(lc_data[i], center=0, vmin=-100, vmax=100 )
+
+	anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(lc_data), repeat=False)
+	anim.save( "citytile_fuel.gif", writer='pillow', fps=2)
+
+	return False
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   MAIN
@@ -122,7 +178,7 @@ if __name__ == "__main__":
 	#setup logging
 	logging.basicConfig(
 		#level of debug to show
-		level=logging.DEBUG,
+		level=logging.INFO,
 		#header of the debug message
 		format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
 	)
@@ -135,5 +191,8 @@ if __name__ == "__main__":
 
 	if TEST_BIGNOBRAINER_PERCEPTION==True:
 		#test_big_no_brainer_perception( "pickle_dump_game_state.bin" )
-		test_big_no_brainer_perception( "backup_100.bin" )
+		test_big_no_brainer_perception( "saved_game_states\\backup_100.bin" )
 
+	if TEST_BIGNOBRAINER_PERCEPTION_ANIMATED==True:
+		#animate_heatmap("test.gif")
+		test_big_no_brainer_perception_animation( [f"saved_game_states\\backup_{50*index}.bin" for index in range(8) ]  )
