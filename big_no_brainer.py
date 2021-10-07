@@ -63,6 +63,7 @@ class Perception():
     class E_INPUT_SPACIAL_MATRICIES( Enum ):
         #combined citytile fuel matrix
         CITYTILE_FUEL = auto(),
+
         #Combined cooldown matrix
         COOLDOWN = auto(),
 
@@ -107,8 +108,6 @@ class Perception():
         ENEMY_COOLDOWN_CITYTILES = auto(),
         ENEMY_COOLDOWN_WORKERS = auto(),
         ENEMY_COOLDOWN_CARTS = auto(),
-        #number of spacial state variables
-        NUM = auto(),
         
         
        
@@ -120,23 +119,27 @@ class Perception():
         Args:
             ic_game_state (Game): Current game state
         """
+
         #store locally the game state. Not visible from outside
         self._c_map = ic_game_state.map
         self._c_own = ic_game_state.players[ ic_game_state.id ]
         self._c_enemy = ic_game_state.players[ ic_game_state.opponent_id ]
-
+        #tiles are shifted so that all map sizes are centered
+        self._w_shift = (GAME_CONSTANTS['MAP']['WIDTH_MAX'] - ic_game_state.map_width) // 2
+        self._h_shift = (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] - ic_game_state.map_height) // 2
         #initialize perception matricies
-        self.mats = np.zeros( (20, GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
+        logging.debug(f"Allocating input spacial matricies: {len(Perception.E_INPUT_SPACIAL_MATRICIES)}")
+        self.mats = np.zeros( (len(Perception.E_INPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
         #fill the perception matrix
         self.invalid = self._generate_perception()
-
+        Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL
         return
 
     #----------------    Overloads    ---------------
 
     ## Stringfy class for print method
     def __str__(self) -> str:
-        return f"Perception{self._game}"
+        return f"Perception{self.mats}"
 
     #----------------    Protected    ---------------
 
@@ -154,8 +157,14 @@ class Perception():
         Returns:
             bool: False=OK | True=FAIL
         """
-        
-        for c_city in self._c_own.cities:
+        #scan all Cities in the dictionary of cities
+        for s_city_name, c_city in self._c_own.cities.items():
+            #scan all Citytiles in a City
+            for c_citytile in c_city.citytiles:
+                #get citytile position
+                c_pos = c_citytile.pos
+                logging.debug(f"{c_citytile}")
+
             pass
 
 

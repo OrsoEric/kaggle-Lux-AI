@@ -61,9 +61,9 @@ class City:
     """A city is made of adjacient city tiles"""
     def __init__(self, teamid, cityid, fuel, light_upkeep):
         self.cityid = cityid
-        """???"""
+        """Adjacent citytile belong to the same city, sharing fuel."""
         self.team = teamid
-        """???"""
+        """ID of the player the agent is assigned to"""
         self.fuel = fuel
         """Total fuel stored inside the city. All city tiles shares one storage."""
         self.citytiles: list[CityTile] = []
