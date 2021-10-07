@@ -13,7 +13,6 @@ from lux.game_map import Position
 from agent import load_game_state
 
 #from agent import agent
-
 from rule import Rule
 
 import matplotlib.pyplot as plt
@@ -101,6 +100,8 @@ def test_big_no_brainer_perception( is_file_name : str ) -> bool:
 		logging.critical(f"Failed to load game state >{is_file_name}<")
 		return True
 
+	c_game_state.opponent_id = 1-c_game_state.id
+
 	#try to generate a Perception class
 	c_perception = Perception( c_game_state )
 
@@ -133,5 +134,6 @@ if __name__ == "__main__":
 		test_rule_search_nearest( "pickle_dump_game_state.bin" )
 
 	if TEST_BIGNOBRAINER_PERCEPTION==True:
-		test_big_no_brainer_perception( "pickle_dump_game_state.bin" )
+		#test_big_no_brainer_perception( "pickle_dump_game_state.bin" )
+		test_big_no_brainer_perception( "backup_100.bin" )
 
