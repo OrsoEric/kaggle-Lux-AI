@@ -1,3 +1,6 @@
+import logging
+import pickle
+
 from typing import DefaultDict
 from collections import defaultdict
 from lux import annotate
@@ -17,6 +20,47 @@ import missions.mission_controller as MissionController
 import resources.resource_service as ResourceService
 import units.unit_controller as UnitController
 
+
+##  save a game state to file
+#   uses pickle
+def save_game_state( ic_game_state : Game(), is_file_name : str() ) -> bool:
+    """save a game state to file
+    Args:
+        ic_game_state (Game): game state to be saved
+        is_file_name (str): destination file name 
+    Returns:
+        bool: false: success | true: fail
+    """
+    
+    try:
+        with open(is_file_name, "wb") as opened_file:
+            pickle.dump( ic_game_state, opened_file )
+
+    except OSError as problem:
+        logging.critical(f"Pickle: {problem}")
+        return True
+
+    return False
+
+##  load a game state to file
+#   uses pickle
+def load_game_state( is_file_name : str() ) -> Game:
+    """load a game state to file
+    Args:
+        is_file_name (str): source file name 
+    Returns:
+        Game: loaded game state
+    """
+    
+    try:
+        with open(is_file_name, "rb") as opened_file:
+            ic_game_state = pickle.load( opened_file )
+
+    except OSError as problem:
+        logging.critical(f"Pickle: {problem}")
+        return None
+
+    return ic_game_state
 
 game_state = None
 clusters: DefaultDict[str, Cluster] = defaultdict(Cluster)
@@ -39,7 +83,16 @@ def agent(observation, configuration):
     else:
         game_state._update(observation["updates"])
 
+
+    if game_state.turn%50 == 0:
+        save_game_state( game_state, f"backup_{game_state.turn}.bin" )
+
+
     actions = []
+
+
+
+
 
     # To update day and night information
     game_state_info = GameStateInfo.update_game_state_info(
