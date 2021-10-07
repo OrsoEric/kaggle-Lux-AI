@@ -62,5 +62,8 @@
     "MIN_ROAD": 0,
     "CART_ROAD_DEVELOPMENT_RATE": 0.75,
     "PILLAGE_RATE": 0.5
+  },
+  "PERCEPTION":{
+    "INPUT_CITYTILE_FUEL_OFFSET" : 1
   }
 }

@@ -16,8 +16,8 @@ from agent import load_game_state
 
 from rule import Rule
 
-#from pprint import pprint
-import pprint
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONSTANTS(fake)
@@ -105,6 +105,9 @@ def test_big_no_brainer_perception( is_file_name : str ) -> bool:
 	c_perception = Perception( c_game_state )
 
 	logging.debug( c_perception )
+
+	sns.heatmap(c_perception.mats[0])
+	plt.show()
 
 	return False
 

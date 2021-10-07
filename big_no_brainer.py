@@ -62,10 +62,10 @@ class Perception():
     #enumerate possible types of cell {5+6+12+8=31} * {Width} * {Height}
     class E_INPUT_SPACIAL_MATRICIES( Enum ):
         #combined citytile fuel matrix
-        CITYTILE_FUEL = auto(),
+        CITYTILE_FUEL = 0,
 
         #Combined cooldown matrix
-        COOLDOWN = auto(),
+        COOLDOWN = 1,
 
     class Dummy(Enum):
         #Resources 5 * {Width} * {Height}
@@ -128,8 +128,8 @@ class Perception():
         self._w_shift = (GAME_CONSTANTS['MAP']['WIDTH_MAX'] - ic_game_state.map_width) // 2
         self._h_shift = (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] - ic_game_state.map_height) // 2
         #initialize perception matricies
-        logging.debug(f"Allocating input spacial matricies: {len(Perception.E_INPUT_SPACIAL_MATRICIES)}")
         self.mats = np.zeros( (len(Perception.E_INPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
+        logging.debug(f"Allocating input spacial matricies: {len(Perception.E_INPUT_SPACIAL_MATRICIES)} | shape: {self.mats.shape}")
         #fill the perception matrix
         self.invalid = self._generate_perception()
         Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL
@@ -157,15 +157,30 @@ class Perception():
         Returns:
             bool: False=OK | True=FAIL
         """
-        #scan all Cities in the dictionary of cities
+        #scan all Own Cities in the dictionary of cities
         for s_city_name, c_city in self._c_own.cities.items():
             #scan all Citytiles in a City
             for c_citytile in c_city.citytiles:
                 #get citytile position
                 c_pos = c_citytile.pos
-                logging.debug(f"{c_citytile}")
+                #write city fuel information inside the Own Citytile Fuel mat
+                logging.debug(Perception.E_INPUT_SPACIAL_MATRICIES["CITYTILE_FUEL"].value)
+                self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value, c_pos.x, c_pos.y] = GAME_CONSTANTS["PERCEPTION"]["INPUT_CITYTILE_FUEL_OFFSET"] + c_city.fuel
 
             pass
+
+        #scan all Enemy Cities in the dictionary of cities
+        for s_city_name, c_city in self._c_enemy.cities.items():
+            #scan all Citytiles in a City
+            for c_citytile in c_city.citytiles:
+                #get citytile position
+                c_pos = c_citytile.pos
+                #write city fuel information inside the Own Citytile Fuel mat
+                logging.debug(Perception.E_INPUT_SPACIAL_MATRICIES["CITYTILE_FUEL"].value)
+                self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value, c_pos.x, c_pos.y] = -GAME_CONSTANTS["PERCEPTION"]["INPUT_CITYTILE_FUEL_OFFSET"] -c_city.fuel
+
+            pass
+
 
 
         return False
