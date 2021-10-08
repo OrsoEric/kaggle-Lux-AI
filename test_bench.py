@@ -38,7 +38,7 @@ TEST_RULE_SEARCH_NEAREST = False
 
 #depickle a game state, and test the construction of a perception
 TEST_BIGNOBRAINER_PERCEPTION = False
-TEST_BIGNOBRAINER_PERCEPTION_ANIMATED = True
+TEST_BIGNOBRAINER_PERCEPTION_ANIMATED = True 
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   TEST BENCHES

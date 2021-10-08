@@ -16,17 +16,25 @@
 #   IMPORT
 #--------------------------------------------------------------------------------------------------------------------------------
 
+from inspect import CO_VARARGS
 import logging
 #enumeration support
 from enum import Enum, auto
 import pickle
 
+#efficient nested loops
+from itertools import product
+
 import numpy as np
 
 #LUX-AI-2021
 from lux.constants import GAME_CONSTANTS
+from lux.constants import Constants
+RESOURCE_TYPES = Constants.RESOURCE_TYPES
+
 from lux.game import Game
 from lux.game_map import Position
+from lux.game_objects import Unit
 
 #plot
 import matplotlib.pyplot as plt
@@ -39,7 +47,17 @@ import matplotlib.animation as animation
 #--------------------------------------------------------------------------------------------------------------------------------
 
 class Perception():
+    """There are 8 matrices:
 
+    (V) Cities matrix: every tile has a value of +fuel+1 for bot's cities and -fuel-1 for opponent's cities
+    (V) Workers matrix: every tile has a value of +resources+1 for boot's workers and -resources-1 for opponent's ones
+    (V) Cart matrix: as workers matrix
+    ( ) Wood matrix: amount of wood per tile
+    ( ) Coal matrix: as wood
+    ( ) Uranium matrix: as wood
+    ( ) Road matrix: road value per tile
+    ( ) Cooldown matrix: Bot's cooldown with negative sign, opponent's cooldown positive
+    """
     #----------------    Configurations    ----------------
 
     #Turn number
@@ -79,12 +97,17 @@ class Perception():
         #Combined Cart Resource matrix
         CART_RESOURCE = 2,
 
-        #Combined cooldown matrix
-        #COOLDOWN = 4,
+        #Individual Resource Cell matricies
+        RAW_WOOD = 3,
+        RAW_COAL = 4,
+        RAW_URANIUM = 5,
 
+        #Roads Matrix
+        #ROAD = 6
 
-        
-        
+        #Combined cooldown matrix for units/cities own/enemy
+        #COOLDOWN = 7,
+
     #----------------    Constructor    ----------------
 
     def __init__( self, ic_game_state : Game ):
@@ -105,6 +128,8 @@ class Perception():
         logging.debug(f"Allocating input spacial matricies: {len(Perception.E_INPUT_SPACIAL_MATRICIES)} | shape: {self.mats.shape}")
         #fill the perception matrix
         self.invalid = self._generate_perception()
+        self.invalid |= self._generate_unit_resource_matrix()
+        self.invalid |= self._generate_raw_resource_matrix()
         Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL
         return
 
@@ -193,33 +218,79 @@ class Perception():
         Returns:
             bool: False=OK | True=FAIL
         """
-        #Scan all Own Unit
-        for c_unit in self._c_own.units:
+
+        def push_unit( ic_unit : Unit, ix_is_enemy : bool ) -> bool:
+            """helper function that push an unit in the appropriate matrix
+            Args:
+                ic_unit (Unit): [description]
+            Returns:
+                bool: False=OK | True=FAIL
+            """
             #resources carried by the unit
             n_resources = c_unit.cargo.wood +c_unit.cargo.coal +c_unit.cargo.uranium
-            #unit position
+            #Own units have an offset and positive resources
+            if ix_is_enemy == False:
+                n_fill_value = GAME_CONSTANTS["PERCEPTION"]["INPUT_UNIT_RESOURCE_OFFSET"] +n_resources
+            #Enemy units have negative offset and resources
+            else:
+                n_fill_value = -GAME_CONSTANTS["PERCEPTION"]["INPUT_UNIT_RESOURCE_OFFSET"] -n_resources
+            #fetch unit position
             c_pos = c_unit.pos
             if self._check_bounds_pos( c_pos ) == True:
-                    return True
+                return True            
             #Workers fit the combined Worker/Resource matrix
             if c_unit.is_worker():
                 #accumulate this worker resource in the combined Worker/Resource matrix
-                self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.WORKER_RESOURCE.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] += +GAME_CONSTANTS["PERCEPTION"]["INPUT_UNIT_RESOURCE_OFFSET"] +n_resources
-
-            #Handle carts
+                self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.WORKER_RESOURCE.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] += n_fill_value
+            #Carts fit the combined Worker/Resource matrix
             elif c_unit.is_cart():
                 #accumulate this worker resource in the combined Worker/Resource matrix
-                self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.CART_RESOURCE.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] += +GAME_CONSTANTS["PERCEPTION"]["INPUT_UNIT_RESOURCE_OFFSET"] +n_resources
-
+                self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.CART_RESOURCE.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] += n_fill_value
             #Default Case:
             else:
                 #ERROR!!! Unknown unit
                 logging.critical(f"Unit type is unknown: {c_unit}")
                 return True
+            return False
 
-                #iterate over all units
+        #Scan all Own Unit
+        for c_unit in self._c_own.units:
+            #fit the unit in the appropriate matrix with +sign for resource
+            push_unit(c_unit, False)
+            
+        #Scan all Enemy Unit
+        for c_unit in self._c_enemy.units:
+            #fit the unit in the appropriate matrix with +sign for resource
+            push_unit(c_unit, True)
 
+        return False
 
+    def _generate_raw_resource_matrix( self ) -> bool:
+
+        #scan every 2D coordinate on the map
+        for w, h in product( range( self._c_map.width ), range( self._c_map.height ) ):
+            #Fetch the cell
+            c_cell = self._c_map.get_cell( w, h )
+            #Fetch position
+            c_pos = c_cell.pos
+            if self._check_bounds_pos( c_pos ) == True:
+                return True
+            #if the cell is not a Raw resource
+            if c_cell.has_resource() == False:
+                pass
+            #cell is a Raw Resource
+            elif (c_cell.resource.type == RESOURCE_TYPES.WOOD ):
+                self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] = c_cell.resource.amount
+            elif (c_cell.resource.type == RESOURCE_TYPES.COAL ):
+                self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_COAL.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] = c_cell.resource.amount
+            elif (c_cell.resource.type == RESOURCE_TYPES.URANIUM ):
+                self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_URANIUM.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] = c_cell.resource.amount
+            #cell is not a Raw Resource
+            else:
+                logging.critical(f"Cell is not a Resource but it should be. {c_cell}")
+                pass
+
+        #logging.info(f"Resource: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value].sum()} {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_COAL.value].sum()} {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_URANIUM.value].sum()}")
         return False
 
     def _generate_perception( self ) -> bool:
@@ -297,22 +368,51 @@ def gify_list_perception( ilc_list_perception : list, is_filename : str, in_fram
         in_framerate (int): [description]
     """
     logging.debug(f"saving heatmaps...")
-    fig = plt.figure()
     dimension = (32, 32)
+    fig, axes = plt.subplots( nrows=2, ncols=3, figsize=(8, 4) )
+    ((ax1, ax2, ax3), (ax4, ax5, ax6)) = axes
 
-    def draw_heatmap( data ):
-        plt.clf()
-        sns.heatmap(data, center=0, vmin=-100, vmax=100)
+    ax1.title.set_text('Citytile/Fuel')
+    ax2.title.set_text('Worker/Resource')
 
-    draw_heatmap( np.zeros(dimension) )
+    
+    
+    
+    def draw_heatmap( ic_perception: Perception ):
+        #TODO only first time draw the colorbar
+
+        #plt.clf()
+        
+        data_citytile_fuel = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value[0] ]
+
+        data_worker_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.WORKER_RESOURCE.value[0] ]
+
+        data_raw_wood = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value[0] ]
+        data_raw_coal = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_COAL.value[0] ]
+        data_raw_uranium = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_URANIUM.value[0] ]
+        
+        
+        sns.heatmap( data_citytile_fuel, center=0, vmin=-100, vmax=100, ax=ax1, cbar=False )
+        sns.heatmap( data_worker_resource, center=0, vmin=-100, vmax=100, ax=ax2, cbar=False )
+        
+        sns.heatmap( data_raw_wood, center=0, vmin=-100, vmax=100, ax=ax4, cbar=False )
+        ax4.title.set_text(f"Raw Wood {data_raw_wood.sum()}")
+        sns.heatmap( data_raw_coal, center=0, vmin=-100, vmax=100, ax=ax5, cbar=False )
+        sns.heatmap( data_raw_uranium, center=0, vmin=-100, vmax=100, ax=ax6, cbar=False )
+        
+        return [ data_citytile_fuel.sum(), data_worker_resource.sum() ]
+
+
+    draw_heatmap( ilc_list_perception[0] )
 
     def init():
         
-        draw_heatmap( np.zeros(dimension)  )
+        draw_heatmap( ilc_list_perception[0] )
 
     def animate(i):
-        draw_heatmap( ilc_list_perception[i].mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value[0] ] )
-        logging.debug(f"generating heatmap{i} ...")
+        fig.suptitle(f"TURN: {i}", fontsize=16)
+        l_sum = draw_heatmap( ilc_list_perception[i] )
+        logging.info(f"generating heatmap{i} ... {l_sum}")
 
     anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(ilc_list_perception), repeat=False, save_count=len(ilc_list_perception))
     anim.save( is_filename, writer='pillow', fps=in_framerate )
