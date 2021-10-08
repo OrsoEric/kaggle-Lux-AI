@@ -1,6 +1,6 @@
 #	Useful:
 #		Execute BOT
-#	lux-ai-2021 main.py main.py --out=replay.json 
+#	lux-ai-2021 main.py main.py --out=replay.json --maxtime 60000
 #		See replay in action
 #	https://2021vis.lux-ai.org/
 
@@ -11,6 +11,8 @@
 from typing import Dict
 #import sys
 import logging
+
+import numpy as np
 
 #import the stdin constants and make them available 
 from lux.constants import Constants
@@ -30,11 +32,14 @@ from big_no_brainer import save_list_perception
 if __name__ == "__main__":
 
 	logging.basicConfig(
+		#filename=f"log{np.random.randint(0,1000)}.log",
+		#filemode="w",
 		#level of debug to show
 		level=logging.INFO,
 		#header of the debug message
 		format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
 	)
+	logging.info("BEGIN")
 
 	def read_input():
 		"""fetch inputs from stdin
@@ -93,11 +98,11 @@ if __name__ == "__main__":
 			observation["updates"] = []
 			step += 1
 			observation["step"] = step
+
+			logging.shutdown()
+
 			#inform the game engine that actions are done.
 			print(",".join(actions))
 			print("D_FINISH")
-		
-		if (step==360):
-			save_list_perception( lc_gif_perception, f"citytile_fuel{gif_game_state.id}.gif")
 
-
+			

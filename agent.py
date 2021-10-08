@@ -30,6 +30,8 @@ from lux.game import Game
 from rule import Rule
 
 from big_no_brainer import Perception
+#from big_no_brainer import save_list_perception
+from big_no_brainer import save_perceptions
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONSTANTS(fake)
@@ -37,6 +39,13 @@ from big_no_brainer import Perception
 
 #True: save the game state at first turn with pickle
 X_PICKLE_SAVE_GAME_STATE = False
+
+#--------------------------------------------------------------------------------------------------------------------------------
+#   
+#--------------------------------------------------------------------------------------------------------------------------------
+
+global lc_perceptions
+lc_perceptions = list()
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   IMPORTS
@@ -112,6 +121,8 @@ def agent( observation , configurations ):
 	#   Game wide parameters
 	#--------------------------------------------------------------------------------------------------------------------------------
 
+	logging.info(f"map size: {game_state.map_height}*{game_state.map_width}")
+
 	#compute which player is assigned to this agent, and which player is assigned to the opponent's agent
 	player = game_state.players[game_state.id]
 	opponent = game_state.players[game_state.opponent_id]
@@ -132,4 +143,19 @@ def agent( observation , configurations ):
 	agent_actions = agent_rule_processor.compute_actions()
 	logging.debug(f"Actions: {agent_actions}")
 
-	return agent_actions, Perception(game_state)
+	#--------------------------------------------------------------------------------------------------------------------------------
+	#   Perceptions
+	#--------------------------------------------------------------------------------------------------------------------------------
+
+	c_perception = Perception( game_state )
+	lc_perceptions.append( c_perception )
+	logging.info(f"Perceptions: {len(lc_perceptions)}")
+	if (game_state.turn == 360):
+		s_filename = f"citytile_agent{game_state.id}.pkl"
+		logging.info(f"SAVE {game_state.turn} as {s_filename}")
+		#save_list_perception(lc_perceptions , s_filename )
+		save_perceptions( lc_perceptions, s_filename )
+		logging.info(f"DONE {s_filename}")
+		pass
+
+	return agent_actions

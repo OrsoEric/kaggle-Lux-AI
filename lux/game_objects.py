@@ -1,4 +1,3 @@
-from agent import RESOURCE_TYPES
 import logging
 
 from typing import Dict
@@ -7,6 +6,7 @@ from typing import Dict
 from lux.constants import Constants
 from lux.constants import GAME_CONSTANTS
 UNIT_TYPES = Constants.UNIT_TYPES
+RESOURCE_TYPES = Constants.RESOURCE_TYPES
 
 from lux.game_map import Position
 from lux.game_map import GameMap
