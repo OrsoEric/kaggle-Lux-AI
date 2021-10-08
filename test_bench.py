@@ -114,13 +114,10 @@ def test_big_no_brainer_perception( is_file_name : str ) -> bool:
 
 	logging.debug( c_perception )
 
-	#sns.heatmap( c_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value[0] ], center=0 )
-	#plt.show()
-
 	return False
 
 
-from big_no_brainer import save_list_perception
+from big_no_brainer import gify_list_perception
 def test_big_no_brainer_perception_animation( ils_file_name : list ) -> bool:
 	"""Test the creation of a perception class for the Big No Brainer NN Agent
 	Load from a given list of gamestates
@@ -154,26 +151,8 @@ def test_big_no_brainer_perception_animation( ils_file_name : list ) -> bool:
 		#plt.show()
 	
 	#from a list of perceptions, generate heatmaps of the input matricies and save them as animated gifs
-	save_list_perception( lc_perception, "citytile_fuel.gif" )
+	gify_list_perception( lc_perception, "citytile_fuel.gif", 2 )
 
-	"""
-	fig = plt.figure()
-	dimension = (32, 32)
-	data = np.random.rand(dimension[0], dimension[1])
-	sns.heatmap(data, center=0, vmin=-100, vmax=100)
-
-	def init():
-		plt.clf()
-		sns.heatmap(np.zeros(dimension), center=0, vmin=-100, vmax=100 )
-
-	def animate(i):
-		plt.clf()
-		#data = np.random.rand(dimension[0], dimension[1])
-		sns.heatmap(lc_data[i], center=0, vmin=-100, vmax=100 )
-
-	anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(lc_data), repeat=False)
-	anim.save( "citytile_fuel.gif", writer='pillow', fps=2)
-	"""
 	return False
 
 #--------------------------------------------------------------------------------------------------------------------------------
