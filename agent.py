@@ -29,12 +29,22 @@ from lux.game import Game
 #Import the rule processor for the rule based agent
 from rule import Rule
 
+from big_no_brainer import Perception
+#from big_no_brainer import save_list_perception
+
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONSTANTS(fake)
 #--------------------------------------------------------------------------------------------------------------------------------
 
 #True: save the game state at first turn with pickle
 X_PICKLE_SAVE_GAME_STATE = False
+
+#--------------------------------------------------------------------------------------------------------------------------------
+#   
+#--------------------------------------------------------------------------------------------------------------------------------
+
+global lc_perceptions
+lc_perceptions = list()
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   IMPORTS
@@ -129,5 +139,15 @@ def agent( observation , configurations ):
 	#ask the rule processor to come up with a list of actions
 	agent_actions = agent_rule_processor.compute_actions()
 	logging.debug(f"Actions: {agent_actions}")
+
+	#--------------------------------------------------------------------------------------------------------------------------------
+	#   Perceptions
+	#--------------------------------------------------------------------------------------------------------------------------------
+
+	#c_perception = Perception( game_state )
+	#lc_perceptions.append( c_perception )
+	if (game_state.turn == 360):
+		#save_list_perception(lc_perceptions ,f"citytile_agent{game_state.id}.bin")
+		pass
 
 	return agent_actions

@@ -24,6 +24,12 @@ import numpy as np
 from lux.constants import GAME_CONSTANTS
 from lux.game import Game
 
+#plot
+import matplotlib.pyplot as plt
+import seaborn as sns
+#convert input matricies into .gif
+import matplotlib.animation as animation
+logging.info("IMPORT COMPLETE big_no_brainer")
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   Perception
@@ -206,12 +212,6 @@ class Perception():
 #--------------------------------------------------------------------------------------------------------------------------------
 #   Save Heatmaps
 #--------------------------------------------------------------------------------------------------------------------------------
-
-#plot
-import matplotlib.pyplot as plt
-import seaborn as sns
-#convert input matricies into .gif
-import matplotlib.animation as animation
 
 def save_list_perception( ilc_list_perception : list, is_filename : str ):
 
