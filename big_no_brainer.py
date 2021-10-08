@@ -16,7 +16,7 @@
 #   IMPORT
 #--------------------------------------------------------------------------------------------------------------------------------
 
-from inspect import CO_VARARGS
+#from inspect import CO_VARARGS
 import logging
 #enumeration support
 from enum import Enum, auto
@@ -52,9 +52,9 @@ class Perception():
     (V) Cities matrix: every tile has a value of +fuel+1 for bot's cities and -fuel-1 for opponent's cities
     (V) Workers matrix: every tile has a value of +resources+1 for boot's workers and -resources-1 for opponent's ones
     (V) Cart matrix: as workers matrix
-    ( ) Wood matrix: amount of wood per tile
-    ( ) Coal matrix: as wood
-    ( ) Uranium matrix: as wood
+    (V) Wood matrix: amount of wood per tile
+    (V) Coal matrix: as wood
+    (V) Uranium matrix: as wood
     ( ) Road matrix: road value per tile
     ( ) Cooldown matrix: Bot's cooldown with negative sign, opponent's cooldown positive
     """
@@ -90,23 +90,18 @@ class Perception():
     class E_INPUT_SPACIAL_MATRICIES( Enum ):
         #combined Citytile Fuel matrix
         CITYTILE_FUEL = 0,
-
         #Combined Worker Resource matrix
         WORKER_RESOURCE = 1,
-
         #Combined Cart Resource matrix
         CART_RESOURCE = 2,
-
         #Individual Resource Cell matricies
         RAW_WOOD = 3,
         RAW_COAL = 4,
         RAW_URANIUM = 5,
-
         #Roads Matrix
-        #ROAD = 6
-
+        ROAD = 6
         #Combined cooldown matrix for units/cities own/enemy
-        #COOLDOWN = 7,
+        COOLDOWN = 7,
 
     #----------------    Constructor    ----------------
 
@@ -125,12 +120,12 @@ class Perception():
         self._h_shift = (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] - ic_game_state.map_height) // 2
         #initialize perception matricies
         self.mats = np.zeros( (len(Perception.E_INPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
-        logging.debug(f"Allocating input spacial matricies: {len(Perception.E_INPUT_SPACIAL_MATRICIES)} | shape: {self.mats.shape}")
+        logging.info(f"Allocating input spacial matricies: {len(Perception.E_INPUT_SPACIAL_MATRICIES)} | shape: {self.mats.shape}")
         #fill the perception matrix
         self.invalid = self._generate_perception()
         self.invalid |= self._generate_unit_resource_matrix()
-        self.invalid |= self._generate_raw_resource_matrix()
-        Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL
+        self.invalid |= self._generate_raw_resource_road_matrix()
+
         return
 
     #----------------    Overloads    ---------------
@@ -265,7 +260,7 @@ class Perception():
 
         return False
 
-    def _generate_raw_resource_matrix( self ) -> bool:
+    def _generate_raw_resource_road_matrix( self ) -> bool:
 
         #scan every 2D coordinate on the map
         for w, h in product( range( self._c_map.width ), range( self._c_map.height ) ):
@@ -290,7 +285,11 @@ class Perception():
                 logging.critical(f"Cell is not a Resource but it should be. {c_cell}")
                 pass
 
+            #save the road level as well since I'm scanning the cells
+            self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] = c_cell.road
+
         #logging.info(f"Resource: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value].sum()} {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_COAL.value].sum()} {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_URANIUM.value].sum()}")
+        logging.info(f"Road: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value].sum()}")
         return False
 
     def _generate_perception( self ) -> bool:
@@ -369,8 +368,8 @@ def gify_list_perception( ilc_list_perception : list, is_filename : str, in_fram
     """
     logging.debug(f"saving heatmaps...")
     dimension = (32, 32)
-    fig, axes = plt.subplots( nrows=2, ncols=3, figsize=(12, 12) )
-    ((ax1, ax2, ax3), (ax4, ax5, ax6)) = axes
+    fig, axes = plt.subplots( nrows=3, ncols=3, figsize=(12, 12) )
+    ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax31, ax32, ax33)) = axes
     
     def draw_heatmap( ic_perception: Perception ):
         #TODO only first time draw the colorbar
@@ -390,19 +389,22 @@ def gify_list_perception( ilc_list_perception : list, is_filename : str, in_fram
         ax3.title.set_text(f"Cart/Resource {data_cart_resource.sum()}")
         sns.heatmap( data_cart_resource, center=0, vmin=-100, vmax=100, ax=ax3, cbar=False )
         
-
         data_raw_wood = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value[0] ]
         data_raw_coal = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_COAL.value[0] ]
         data_raw_uranium = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_URANIUM.value[0] ]
-        
         ax4.title.set_text(f"Raw Wood {data_raw_wood.sum()}")
-        ax5.title.set_text(f"Raw Wood {data_raw_coal.sum()}")
-        ax6.title.set_text(f"Raw Wood {data_raw_uranium.sum()}")
-
+        ax5.title.set_text(f"Raw Coal {data_raw_coal.sum()}")
+        ax6.title.set_text(f"Raw Uranium {data_raw_uranium.sum()}")
         sns.heatmap( data_raw_wood, center=0, vmin=-100, vmax=100, ax=ax4, cbar=False )
         sns.heatmap( data_raw_coal, center=0, vmin=-100, vmax=100, ax=ax5, cbar=False )
         sns.heatmap( data_raw_uranium, center=0, vmin=-100, vmax=100, ax=ax6, cbar=False )
         
+        #????? Why ROAD has a different shape???
+        #logging.info(f"ROADS: {Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value} | shape: {ic_perception.mats.shape}")
+        data_road = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value ]
+        ax31.title.set_text(f"Raw Wood {data_road.sum()}")
+        sns.heatmap( data_road, center=0, vmin=0, vmax=6, ax=ax31, cbar=False )
+
         return [ data_citytile_fuel.sum(), data_worker_resource.sum() ]
 
 
