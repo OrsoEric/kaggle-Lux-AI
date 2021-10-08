@@ -120,11 +120,12 @@ class Perception():
         self._h_shift = (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] - ic_game_state.map_height) // 2
         #initialize perception matricies
         self.mats = np.zeros( (len(Perception.E_INPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
-        logging.info(f"Allocating input spacial matricies: {len(Perception.E_INPUT_SPACIAL_MATRICIES)} | shape: {self.mats.shape}")
+        logging.debug(f"Allocating input spacial matricies: {len(Perception.E_INPUT_SPACIAL_MATRICIES)} | shape: {self.mats.shape}")
         #fill the perception matrix
         self.invalid = self._generate_perception()
         self.invalid |= self._generate_unit_resource_matrix()
         self.invalid |= self._generate_raw_resource_road_matrix()
+        self.invalid |= self._generate_cooldown()
 
         return
 
@@ -289,7 +290,45 @@ class Perception():
             self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] = c_cell.road
 
         #logging.info(f"Resource: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value].sum()} {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_COAL.value].sum()} {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_URANIUM.value].sum()}")
-        logging.info(f"Road: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value].sum()}")
+        #logging.info(f"Road: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value].sum()}")
+        return False
+
+    def _generate_cooldown( self ) -> bool:
+
+        def push_cooldown( c_pos : Position, in_cooldown : int, ix_is_enemy : bool ) -> bool:
+
+            if in_cooldown < 0 or in_cooldown > 6:
+                logging.critical(f"Cooldown is invalid {in_cooldown}")
+                return True
+            #Own units have an offset and positive resources
+            if ix_is_enemy == False:
+                n_fill_value = GAME_CONSTANTS["PERCEPTION"]["INPUT_COOLDOWN_OFFSET"] +in_cooldown
+            #Enemy units have negative offset and resources
+            else:
+                n_fill_value = -GAME_CONSTANTS["PERCEPTION"]["INPUT_COOLDOWN_OFFSET"] -in_cooldown
+            #fetch unit position
+            c_pos = c_unit.pos
+            if self._check_bounds_pos( c_pos ) == True:
+                logging.critical(f"Position is invalid {c_pos}")
+                return True            
+            
+            self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] = in_cooldown
+
+            return False
+
+        #Scan all Own Unit
+        for c_unit in self._c_own.units:
+            #fit cooldown with +sign for resource
+            push_cooldown( c_unit.pos, c_unit.cooldown, False )
+            pass
+            
+        #Scan all Enemy Unit
+        for c_unit in self._c_enemy.units:
+            #fit cooldown with +sign for resource
+            push_cooldown( c_unit.pos, c_unit.cooldown, True )
+            pass
+
+        logging.info(f"CD: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value].sum()}") 
         return False
 
     def _generate_perception( self ) -> bool:
@@ -402,8 +441,13 @@ def gify_list_perception( ilc_list_perception : list, is_filename : str, in_fram
         #????? Why ROAD has a different shape???
         #logging.info(f"ROADS: {Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value} | shape: {ic_perception.mats.shape}")
         data_road = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value ]
-        ax31.title.set_text(f"Raw Wood {data_road.sum()}")
+        ax31.title.set_text(f"Roads {data_road.sum()}")
         sns.heatmap( data_road, center=0, vmin=0, vmax=6, ax=ax31, cbar=False )
+
+        data_cooldown = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value ]
+        ax32.title.set_text(f"Cooldown {data_cooldown.sum()}")
+        sns.heatmap( data_cooldown, center=0, vmin=0, vmax=10, ax=ax32, cbar=False )
+        #GAME_CONSTANTS["PARAMETERS"]["CITY_ACTION_COOLDOWN"]
 
         return [ data_citytile_fuel.sum(), data_worker_resource.sum() ]
 
