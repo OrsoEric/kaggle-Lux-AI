@@ -369,34 +369,37 @@ def gify_list_perception( ilc_list_perception : list, is_filename : str, in_fram
     """
     logging.debug(f"saving heatmaps...")
     dimension = (32, 32)
-    fig, axes = plt.subplots( nrows=2, ncols=3, figsize=(8, 4) )
+    fig, axes = plt.subplots( nrows=2, ncols=3, figsize=(12, 12) )
     ((ax1, ax2, ax3), (ax4, ax5, ax6)) = axes
-
-    ax1.title.set_text('Citytile/Fuel')
-    ax2.title.set_text('Worker/Resource')
-
-    
-    
     
     def draw_heatmap( ic_perception: Perception ):
         #TODO only first time draw the colorbar
 
         #plt.clf()
         
+        #CityTile/Fuel Mat
         data_citytile_fuel = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value[0] ]
+        ax1.title.set_text(f"Citytile/Fuel {data_citytile_fuel.sum()}")
+        sns.heatmap( data_citytile_fuel, center=0, vmin=-100, vmax=100, ax=ax1, cbar=False )
 
         data_worker_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.WORKER_RESOURCE.value[0] ]
+        ax2.title.set_text(f"Worker/Resource {data_worker_resource.sum()}")
+        sns.heatmap( data_worker_resource, center=0, vmin=-100, vmax=100, ax=ax2, cbar=False )
+        
+        data_cart_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CART_RESOURCE.value[0] ]
+        ax3.title.set_text(f"Cart/Resource {data_cart_resource.sum()}")
+        sns.heatmap( data_cart_resource, center=0, vmin=-100, vmax=100, ax=ax3, cbar=False )
+        
 
         data_raw_wood = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value[0] ]
         data_raw_coal = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_COAL.value[0] ]
         data_raw_uranium = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_URANIUM.value[0] ]
         
-        
-        sns.heatmap( data_citytile_fuel, center=0, vmin=-100, vmax=100, ax=ax1, cbar=False )
-        sns.heatmap( data_worker_resource, center=0, vmin=-100, vmax=100, ax=ax2, cbar=False )
-        
-        sns.heatmap( data_raw_wood, center=0, vmin=-100, vmax=100, ax=ax4, cbar=False )
         ax4.title.set_text(f"Raw Wood {data_raw_wood.sum()}")
+        ax5.title.set_text(f"Raw Wood {data_raw_coal.sum()}")
+        ax6.title.set_text(f"Raw Wood {data_raw_uranium.sum()}")
+
+        sns.heatmap( data_raw_wood, center=0, vmin=-100, vmax=100, ax=ax4, cbar=False )
         sns.heatmap( data_raw_coal, center=0, vmin=-100, vmax=100, ax=ax5, cbar=False )
         sns.heatmap( data_raw_uranium, center=0, vmin=-100, vmax=100, ax=ax6, cbar=False )
         
