@@ -75,7 +75,7 @@ class Perception():
     
     #enumerate state vector that describe game wide information, will bypass the spatial processing stage
     class E_INPUT_STATUS_VECTOR( Enum ):
-        MAP_TURN = auto(),
+        MAP_TURN = 0
         MAP_IS_NIGHT = auto(),
         OWN_RESEARCH = auto(),
         OWN_RESEARCHED_COAL = auto(),
@@ -128,13 +128,17 @@ class Perception():
         self.invalid |= self._generate_raw_resource_road_matrix()
         self.invalid |= self._generate_cooldown()
 
+        #allocate the status vector
+        self.status = np.zeros( len(Perception.E_INPUT_STATUS_VECTOR) )
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.MAP_TURN.value ] = ic_game_state.turn
+
         return
 
     #----------------    Overloads    ---------------
 
     ## Stringfy class for print method
     def __str__(self) -> str:
-        return f"Perception{self.mats}"
+        return f"Perception | Raw Wood: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value].sum()} | "
 
     #----------------    Protected    ---------------
 

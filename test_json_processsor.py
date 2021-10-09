@@ -6,7 +6,7 @@ import os
 import logging
 
 import json
-
+import copy
 import numpy as np
 
 #import game constant and make them available to the program
@@ -26,6 +26,9 @@ from big_no_brainer.perception import gify_list_perception
 
 REPLAY_FOLDER = "replays"
 REPLAY_FILE = "27883823.json"
+
+GIF_FRAMERATE = 10
+GIF_TURN_LIMIT = -1
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   FILE
@@ -88,6 +91,7 @@ def observations_to_gamestates( ilc_observations : list ):
     Returns:
         list(Game): List of gamestates. One per turn
     """
+    global c_game_state
     lc_gamestates = list()
     #from a list of observations generates a list of Game()
     for c_observation in lc_observations:
@@ -101,8 +105,8 @@ def observations_to_gamestates( ilc_observations : list ):
         else:
             c_game_state._update(c_observation[INPUT_CONSTANTS.UPDATES])
 
-        #logging.debug(f"Step: {c_observation[INPUT_CONSTANTS.STEP]} | Gamestate: {c_game_state}")
-        lc_gamestates.append( c_game_state )
+        #logging.debug(f"Step: {c_observation[INPUT_CONSTANTS.STEP]} | Gamestate: {c_game_state} ")
+        lc_gamestates.append( copy.deepcopy( c_game_state ) )
 
     logging.debug(f"Gamestates : {len(lc_gamestates)}")
     return lc_gamestates
@@ -114,7 +118,7 @@ def observations_to_gamestates( ilc_observations : list ):
 #   if interpreter has the intent of executing this file
 if __name__ == "__main__":
 
-    logging.basicConfig( level=logging.DEBUG, format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s' )
+    logging.basicConfig( level=logging.INFO, format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s' )
 
     #load the json file containing the replay
     c_json_replay = json_load( REPLAY_FOLDER, REPLAY_FILE )
@@ -125,13 +129,15 @@ if __name__ == "__main__":
     #from list of observations generate list of Game()
     lc_gamestates = observations_to_gamestates( lc_observations )
     
+    
     lc_perceptions = list()
     #from a list of Game() generates a list of Perception()
     for c_gamestate in lc_gamestates:
         c_perception = Perception( c_gamestate )
+        logging.debug(f"Game: {c_gamestate}")
+        logging.debug(f"Step: {c_perception.status[Perception.E_INPUT_STATUS_VECTOR.MAP_TURN.value]}  | Perceptions : {c_perception}")
         lc_perceptions.append( c_perception )
-    
     logging.debug(f"Perceptions : {len(lc_perceptions)}")
-
+    
     #from a list of Perception generates a .gif()
-    gify_list_perception( lc_perceptions, "replay.gif", 1,in_max_frames=10 )
+    gify_list_perception( lc_perceptions, "replay.gif", GIF_FRAMERATE,in_max_frames=GIF_TURN_LIMIT )
