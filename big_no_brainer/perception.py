@@ -353,7 +353,7 @@ class Perception():
                 if self._check_bounds_pos( c_pos ) == True:
                     return True
                 #write city cooldown information 
-                push_cooldown( c_citytile.pos, c_citytile.cooldown, False )
+                push_cooldown( c_citytile.pos, c_citytile.cooldown, True )
 
         #logging.debug(f"CD: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value].sum()}") 
         return False
