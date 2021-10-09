@@ -20,11 +20,11 @@ def preception_to_gif( is_filename : str() ):
 #   if interpreter has the intent of executing this file
 if __name__ == "__main__":
 
-	logging.basicConfig(
-		#level of debug to show
-		level=logging.DEBUG,
-		#header of the debug message
-		format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
-	)
+    logging.basicConfig(
+        #level of debug to show
+        level=logging.DEBUG,
+        #header of the debug message
+        format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
+    )
 
-preception_to_gif("citytile_agent0")
+    preception_to_gif("citytile_agent0")
