@@ -29,9 +29,8 @@ from lux.game import Game
 #Import the rule processor for the rule based agent
 from rule import Rule
 
-from big_no_brainer import Perception
-#from big_no_brainer import save_list_perception
-from big_no_brainer import save_perceptions
+from big_no_brainer.perception import Perception
+from big_no_brainer.perception import save_perceptions
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONSTANTS(fake)

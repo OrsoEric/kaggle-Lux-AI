@@ -24,7 +24,8 @@ from agent import load_game_state
 #from agent import agent
 from rule import Rule
 
-from big_no_brainer import Perception
+from big_no_brainer.perception import Perception
+from big_no_brainer.perception import gify_list_perception
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONSTANTS(fake)
@@ -119,7 +120,7 @@ def test_big_no_brainer_perception( is_file_name : str ) -> bool:
 	return False
 
 
-from big_no_brainer import gify_list_perception
+
 def test_big_no_brainer_perception_animation( ils_file_name : list ) -> bool:
 	"""Test the creation of a perception class for the Big No Brainer NN Agent
 	Load from a given list of gamestates
@@ -153,7 +154,7 @@ def test_big_no_brainer_perception_animation( ils_file_name : list ) -> bool:
 		#plt.show()
 	
 	#from a list of perceptions, generate heatmaps of the input matricies and save them as animated gifs
-	gify_list_perception( lc_perception, "citytile_fuel.gif", 2 )
+	gify_list_perception( lc_perception, "perception.gif", 2 )
 
 	return False
 

@@ -1,8 +1,8 @@
 import logging
 
-from big_no_brainer import Perception
-from big_no_brainer import load_perceptions
-from big_no_brainer import gify_list_perception
+from big_no_brainer.perception import Perception
+from big_no_brainer.perception import load_perceptions
+from big_no_brainer.perception import gify_list_perception
 
 def preception_to_gif( is_filename : str() ):
 
