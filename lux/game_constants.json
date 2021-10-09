@@ -1,4 +1,10 @@
 {
+  "MAP":{
+    "WIDTH_MIN": 12,
+    "HEIGHT_MIN": 12,
+    "WIDTH_MAX": 32,
+    "HEIGHT_MAX": 32
+  },
   "UNIT_TYPES": {
     "WORKER": 0,
     "CART": 1
@@ -56,5 +62,10 @@
     "MIN_ROAD": 0,
     "CART_ROAD_DEVELOPMENT_RATE": 0.75,
     "PILLAGE_RATE": 0.5
+  },
+  "PERCEPTION":{
+    "INPUT_CITYTILE_FUEL_OFFSET" : 1,
+    "INPUT_UNIT_RESOURCE_OFFSET" : 1,
+    "INPUT_COOLDOWN_OFFSET" : 0
   }
 }

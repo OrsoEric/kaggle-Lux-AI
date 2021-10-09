@@ -6,6 +6,7 @@ DIRECTIONS = Constants.DIRECTIONS
 RESOURCE_TYPES = Constants.RESOURCE_TYPES
 
 class Position:
+    """Position on the map. tuple (x,y) width height"""
     def __init__(self, x, y):
         self.x = x
         """coordinate"""

@@ -5,6 +5,7 @@ Releases:
 2021-09-23a BOT2 - RESEARCH BOT : Agent now launches research action when city can use an action. Code cleanup
 2021-09-24a Move rules to Rule.py Rule class
 2021-09-25
+2021-10-10 
 """
 
 #--------------------------------------------------------------------------------------------------------------------------------
@@ -28,12 +29,22 @@ from lux.game import Game
 #Import the rule processor for the rule based agent
 from rule import Rule
 
+from big_no_brainer.perception import Perception
+from big_no_brainer.perception import save_perceptions
+
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONSTANTS(fake)
 #--------------------------------------------------------------------------------------------------------------------------------
 
 #True: save the game state at first turn with pickle
 X_PICKLE_SAVE_GAME_STATE = False
+
+#--------------------------------------------------------------------------------------------------------------------------------
+#   
+#--------------------------------------------------------------------------------------------------------------------------------
+
+global lc_perceptions
+lc_perceptions = list()
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   IMPORTS
@@ -109,6 +120,8 @@ def agent( observation , configurations ):
 	#   Game wide parameters
 	#--------------------------------------------------------------------------------------------------------------------------------
 
+	logging.info(f"map size: {game_state.map_height}*{game_state.map_width}")
+
 	#compute which player is assigned to this agent, and which player is assigned to the opponent's agent
 	player = game_state.players[game_state.id]
 	opponent = game_state.players[game_state.opponent_id]
@@ -128,5 +141,20 @@ def agent( observation , configurations ):
 	#ask the rule processor to come up with a list of actions
 	agent_actions = agent_rule_processor.compute_actions()
 	logging.debug(f"Actions: {agent_actions}")
+
+	#--------------------------------------------------------------------------------------------------------------------------------
+	#   Perceptions
+	#--------------------------------------------------------------------------------------------------------------------------------
+
+	c_perception = Perception( game_state )
+	lc_perceptions.append( c_perception )
+	logging.info(f"Perceptions: {len(lc_perceptions)}")
+	if (game_state.turn == 360):
+		s_filename = f"citytile_agent{game_state.id}.pkl"
+		logging.info(f"SAVE {game_state.turn} as {s_filename}")
+		#save_list_perception(lc_perceptions , s_filename )
+		save_perceptions( lc_perceptions, s_filename )
+		logging.info(f"DONE {s_filename}")
+		pass
 
 	return agent_actions
