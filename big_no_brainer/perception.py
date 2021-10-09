@@ -420,13 +420,14 @@ def load_perceptions( is_file_name : str ):
 #   Save Heatmaps as Gifs
 #--------------------------------------------------------------------------------------------------------------------------------
 
-def gify_list_perception( ilc_list_perception : list, is_filename : str, in_framerate : int ):
+def gify_list_perception( ilc_list_perception : list, is_filename : str, in_framerate : int, in_max_frames = -1 ):
     """Turn a list of perceptions into a Gif
     because of compression, there are going to be fewer frames, but the delay in them ensures the movie represent the correct output
     Args:
-        ilc_list_perception (list): [description]
-        is_filename (str): [description]
-        in_framerate (int): [description]
+        ilc_list_perception (list): list of Perception classes
+        is_filename (str): name of the output gif. must be a .gif
+        in_framerate (int): Framerate in FPS
+        in_max_frames(int): -1=gify ALL the frames | >0 gify only up to a given number of frames
     """
     logging.debug(f"saving heatmaps...")
     dimension = (32, 32)
@@ -484,8 +485,15 @@ def gify_list_perception( ilc_list_perception : list, is_filename : str, in_fram
         l_sum = draw_heatmap( ilc_list_perception[i] )
         logging.info(f"generating heatmap{i} ... {l_sum}")
 
-    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(ilc_list_perception), repeat=False, save_count=len(ilc_list_perception))
+    if (in_max_frames < 0):
+        n_frames = len(ilc_list_perception)
+    elif in_max_frames >= len(ilc_list_perception):
+        n_frames = len(ilc_list_perception)
+    else:
+        n_frames = in_max_frames
+
+    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=n_frames, repeat=False, save_count=n_frames)
     anim.save( is_filename, writer='pillow', fps=in_framerate )
-    logging.debug(f"saving heatmaps as: {is_filename} | total frames: {len(ilc_list_perception)}")
+    logging.debug(f"saving heatmaps as: {is_filename} | total frames: {n_frames}")
 
     return
