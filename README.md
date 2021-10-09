@@ -12,5 +12,5 @@ A module construct a gif of the input matricies from a Game() class. The gif bel
 # test_json_processsor.py  
 This python script converst from a replay.json that can be downloaded from Kaggle in JSON format to a Game() class, to a Perception() class and finally to a .gif image.  
 It takes about 90m to generate the .gif
-
+[Kaggle Replay episode 27883823](https://www.kaggle.com/c/lux-ai-2021/submissions?dialog=episodes-episode-27883823)
 ![Replay of Kaggle episode 27883823](https://raw.githubusercontent.com/OrsoEric/kaggle-Lux-AI/develop/replays/27883823.gif)  
