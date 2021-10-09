@@ -55,7 +55,7 @@ class Perception():
     (V) Wood matrix: amount of wood per tile
     (V) Coal matrix: as wood
     (V) Uranium matrix: as wood
-    ( ) Road matrix: road value per tile
+    (V) Road matrix: road value per tile
     ( ) Cooldown matrix: Bot's cooldown with negative sign, opponent's cooldown positive
     """
     #----------------    Configurations    ----------------
@@ -86,22 +86,23 @@ class Perception():
         #number of global state variables
         NUM = auto(),
 
+	#NOTE: the enum were tuple because i put a coma like a c++ enum.
     #enumerate possible types of cell {5+6+12+8=31} * {Width} * {Height}
     class E_INPUT_SPACIAL_MATRICIES( Enum ):
         #combined Citytile Fuel matrix
-        CITYTILE_FUEL = 0,
+        CITYTILE_FUEL = 0
         #Combined Worker Resource matrix
-        WORKER_RESOURCE = 1,
+        WORKER_RESOURCE = 1
         #Combined Cart Resource matrix
-        CART_RESOURCE = 2,
+        CART_RESOURCE = 2
         #Individual Resource Cell matricies
-        RAW_WOOD = 3,
-        RAW_COAL = 4,
-        RAW_URANIUM = 5,
+        RAW_WOOD = 3
+        RAW_COAL = 4
+        RAW_URANIUM = 5
         #Roads Matrix
         ROAD = 6
         #Combined cooldown matrix for units/cities own/enemy
-        COOLDOWN = 7,
+        COOLDOWN = 7
 
     #----------------    Constructor    ----------------
 
@@ -180,7 +181,7 @@ class Perception():
                 if self._check_bounds( c_pos.x, c_pos.y ) == True:
                     return True
                 #write city fuel information inside the Own Citytile Fuel mat
-                logging.debug(Perception.E_INPUT_SPACIAL_MATRICIES["CITYTILE_FUEL"].value)
+                #logging.debug(Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value)
                 self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] = GAME_CONSTANTS["PERCEPTION"]["INPUT_CITYTILE_FUEL_OFFSET"] + c_city.fuel
  
             pass
@@ -194,7 +195,7 @@ class Perception():
                 if self._check_bounds( c_pos.x, c_pos.y ) == True:
                     return True
                 #write city fuel information inside the Own Citytile Fuel mat
-                logging.debug(Perception.E_INPUT_SPACIAL_MATRICIES["CITYTILE_FUEL"].value)
+                #logging.debug(Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value)
                 self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] = -GAME_CONSTANTS["PERCEPTION"]["INPUT_CITYTILE_FUEL_OFFSET"] -c_city.fuel
         return False
 
@@ -297,7 +298,7 @@ class Perception():
 
         def push_cooldown( c_pos : Position, in_cooldown : int, ix_is_enemy : bool ) -> bool:
 
-            if in_cooldown < 0 or in_cooldown > 6:
+            if in_cooldown < 0 or in_cooldown > GAME_CONSTANTS["PARAMETERS"]["CITY_ACTION_COOLDOWN"]:
                 logging.critical(f"Cooldown is invalid {in_cooldown}")
                 return True
             #Own units have an offset and positive resources
@@ -328,7 +329,29 @@ class Perception():
             push_cooldown( c_unit.pos, c_unit.cooldown, True )
             pass
 
-        logging.info(f"CD: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value].sum()}") 
+        #scan all Own Cities in the dictionary of cities
+        for s_city_name, c_city in self._c_own.cities.items():
+            #scan all Citytiles in a City
+            for c_citytile in c_city.citytiles:
+                #get citytile position
+                c_pos = c_citytile.pos
+                if self._check_bounds_pos( c_pos ) == True:
+                    return True
+                #write city cooldown information 
+                push_cooldown( c_citytile.pos, c_citytile.cooldown, False )
+
+        #scan all Enemy Cities in the dictionary of cities
+        for s_city_name, c_city in self._c_enemy.cities.items():
+            #scan all Citytiles in a City
+            for c_citytile in c_city.citytiles:
+                #get citytile position
+                c_pos = c_citytile.pos
+                if self._check_bounds_pos( c_pos ) == True:
+                    return True
+                #write city cooldown information 
+                push_cooldown( c_citytile.pos, c_citytile.cooldown, False )
+
+        #logging.debug(f"CD: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value].sum()}") 
         return False
 
     def _generate_perception( self ) -> bool:
@@ -416,21 +439,21 @@ def gify_list_perception( ilc_list_perception : list, is_filename : str, in_fram
         #plt.clf()
         
         #CityTile/Fuel Mat
-        data_citytile_fuel = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value[0] ]
+        data_citytile_fuel = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value ]
         ax1.title.set_text(f"Citytile/Fuel {data_citytile_fuel.sum()}")
         sns.heatmap( data_citytile_fuel, center=0, vmin=-100, vmax=100, ax=ax1, cbar=False )
 
-        data_worker_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.WORKER_RESOURCE.value[0] ]
+        data_worker_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.WORKER_RESOURCE.value ]
         ax2.title.set_text(f"Worker/Resource {data_worker_resource.sum()}")
         sns.heatmap( data_worker_resource, center=0, vmin=-100, vmax=100, ax=ax2, cbar=False )
         
-        data_cart_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CART_RESOURCE.value[0] ]
+        data_cart_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CART_RESOURCE.value ]
         ax3.title.set_text(f"Cart/Resource {data_cart_resource.sum()}")
         sns.heatmap( data_cart_resource, center=0, vmin=-100, vmax=100, ax=ax3, cbar=False )
         
-        data_raw_wood = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value[0] ]
-        data_raw_coal = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_COAL.value[0] ]
-        data_raw_uranium = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_URANIUM.value[0] ]
+        data_raw_wood = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value ]
+        data_raw_coal = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_COAL.value ]
+        data_raw_uranium = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_URANIUM.value ]
         ax4.title.set_text(f"Raw Wood {data_raw_wood.sum()}")
         ax5.title.set_text(f"Raw Coal {data_raw_coal.sum()}")
         ax6.title.set_text(f"Raw Uranium {data_raw_uranium.sum()}")
@@ -438,7 +461,6 @@ def gify_list_perception( ilc_list_perception : list, is_filename : str, in_fram
         sns.heatmap( data_raw_coal, center=0, vmin=-100, vmax=100, ax=ax5, cbar=False )
         sns.heatmap( data_raw_uranium, center=0, vmin=-100, vmax=100, ax=ax6, cbar=False )
         
-        #????? Why ROAD has a different shape???
         #logging.info(f"ROADS: {Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value} | shape: {ic_perception.mats.shape}")
         data_road = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value ]
         ax31.title.set_text(f"Roads {data_road.sum()}")
@@ -446,8 +468,7 @@ def gify_list_perception( ilc_list_perception : list, is_filename : str, in_fram
 
         data_cooldown = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value ]
         ax32.title.set_text(f"Cooldown {data_cooldown.sum()}")
-        sns.heatmap( data_cooldown, center=0, vmin=0, vmax=10, ax=ax32, cbar=False )
-        #GAME_CONSTANTS["PARAMETERS"]["CITY_ACTION_COOLDOWN"]
+        sns.heatmap( data_cooldown, center=0, vmin=0, vmax=GAME_CONSTANTS["PARAMETERS"]["CITY_ACTION_COOLDOWN"], ax=ax32, cbar=False )
 
         return [ data_citytile_fuel.sum(), data_worker_resource.sum() ]
 
