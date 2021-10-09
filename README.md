@@ -8,3 +8,9 @@
 
 A module construct a gif of the input matricies from a Game() class. The gif below is made by compiling the Game() states every 50 turns of the rule based clusterbot L16H7
 ![Input Matricies](https://raw.githubusercontent.com/OrsoEric/kaggle-Lux-AI/develop/readme_media/2021-10-09-perception.gif)
+
+# test_json_processsor.py  
+This python script converst from a replay.json that can be downloaded from Kaggle in JSON format to a Game() class, to a Perception() class and finally to a .gif image.  
+It takes about 90m to generate the .gif
+
+![Replay of Kaggle episode 27883823](https://raw.githubusercontent.com/OrsoEric/kaggle-Lux-AI/develop/replays/27883823.gif)  
