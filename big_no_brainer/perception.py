@@ -317,7 +317,7 @@ class Perception():
                 logging.critical(f"Position is invalid {c_pos}")
                 return True            
             
-            self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] = in_cooldown
+            self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] += in_cooldown
 
             return False
 

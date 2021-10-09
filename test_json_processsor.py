@@ -25,7 +25,7 @@ from big_no_brainer.perception import gify_list_perception
 #--------------------------------------------------------------------------------------------------------------------------------
 
 REPLAY_FOLDER = "replays"
-REPLAY_FILE = "27883823.json"
+REPLAY_FILE = "27879876.json"
 
 GIF_FRAMERATE = 10
 GIF_TURN_LIMIT = -1
