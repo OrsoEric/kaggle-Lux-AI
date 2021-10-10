@@ -1,3 +1,11 @@
+##  test_json_processor
+#       2021-10-09
+#   Perception scrubbing and gif Operational 
+#
+#       2021-10-10
+#
+
+
 #--------------------------------------------------------------------------------------------------------------------------------
 #   IMPORTS
 #--------------------------------------------------------------------------------------------------------------------------------
@@ -84,6 +92,73 @@ def json_observation( ic_json ):
     #return a list of oservations, one per Step (turn)
     return lc_observations
 
+
+def parse_action_tokens( inn_mat : np.array,  ils_action_token : list, id_units : dict ) -> bool:
+    """Parse a list of tokens as actions into an output action matrix. If unable to parse, returns True
+    e.g. ['bw', '15', '1'] -> inn_mat[Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_WORKER, 15, 1] = 1
+    e.g. ['m', 'u_2', 's'] -> id_units { u_2 : (11,12) } -> inn_mat[Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_SOUTH, 11, 12] = 1}
+    Args:
+        inn_mat (np.darray): BOT output matrix with the actions for this turn
+        ils_action_token (list): Tokens to be parsed
+        id_units (dict): Dictionary with association unit_name -> position
+    Returns:
+        bool: False=OK | True=FAIL
+    """
+
+
+    return False
+
+def json_to_action( ic_json, id_units : dict ):
+    """From a replay.json extract all actions of the player with a given index
+    output is a list of list of strings in the form. One list of string per step.
+    each list of string list all actions the player gave to it's citytile units
+    [["r 14 8", "m u_1 w"]
+    ["", ""]
+    ["m u_1 w"]]
+
+    Args:
+        ic_json (json): json file opened by json module
+        id_units (dict): dictionary of units e.g. {u_55 : (0, 13, 12) }
+        in_player (int): index of the player wor whom action matrix is generated
+    """
+
+    #allocate player actions
+    lls_player_action = list()
+    logging.debug(f"JSON Steps: {len(ic_json['steps'])}")
+    #Scan every Step of the match (Turn)
+    n_last_step = len(ic_json["steps"])
+    #for n_step in range(1, n_last_step):
+    #scan each step (turn)
+    for c_step in ic_json['steps']:
+        #logging.debug(f"Step: {n_step} of {len(ic_json['steps'])}")
+        #logging.debug(f"Step: {c_step}")
+        #fetch step (turn) only present in player 0 observations
+        n_step = c_step[0]["observation"]["step"]
+        #for all players
+        for c_player in c_step:
+            #logging.debug(f"Player: {c_player}")
+            #fetch index of player
+            n_id = c_player["observation"]["player"]
+            #if player is active or the game is about to be done
+            if c_player["status"] == "ACTIVE" or c_player["status"] == "DONE":
+                #fetch the list of actions the player took in the previous turn
+                #From JSON, From Steps (list of turns), from a given step (turn index), from player 0, is player is active (not dead)
+                ls_actions = c_player['action']
+                #logging.debug(f"Step: {n_step} | Action: {ls_actions}")
+                #scan all actions
+                for s_action in ls_actions:
+                    #decompose the action into tokens
+                    ls_action_token = s_action.split(' ')
+                    logging.debug(f"Step: {n_step} | Player {n_id} | Action Tokens: {ls_action_token}")
+
+            #append this step observations in the list of observations
+            #lls_player_action.append( c_observation )
+
+    #actions_p0 = 
+
+
+    return
+
 def observations_to_gamestates( ilc_observations : list ):
     """
     Args:
@@ -94,7 +169,7 @@ def observations_to_gamestates( ilc_observations : list ):
     global c_game_state
     lc_gamestates = list()
     #from a list of observations generates a list of Game()
-    for c_observation in lc_observations:
+    for c_observation in ilc_observations:
 
         if c_observation[INPUT_CONSTANTS.STEP] == 0:
             c_game_state = Game()
@@ -111,18 +186,13 @@ def observations_to_gamestates( ilc_observations : list ):
     logging.debug(f"Gamestates : {len(lc_gamestates)}")
     return lc_gamestates
 
-#--------------------------------------------------------------------------------------------------------------------------------
-#   MAIN
-#--------------------------------------------------------------------------------------------------------------------------------
-
-#   if interpreter has the intent of executing this file
-if __name__ == "__main__":
-
-    logging.basicConfig( level=logging.INFO, format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s' )
-
-    #load the json file containing the replay
-    c_json_replay = json_load( REPLAY_FOLDER, REPLAY_FILE )
-
+def json_to_perceptions( ic_json ):
+    """From a loaded replay.json extract a list of observations
+    Args:
+        ic_json ([type]): [description]
+    Returns:
+        [type]: [description]
+    """
     #from json loads a list of observations
     lc_observations = json_observation( c_json_replay )
 
@@ -139,5 +209,95 @@ if __name__ == "__main__":
         lc_perceptions.append( c_perception )
     logging.debug(f"Perceptions : {len(lc_perceptions)}")
     
+    return lc_perceptions
+
+
+def json_to_perception_action( ic_json ):
+    """ Parse a replay.json into a list of observations and two list of actions
+    The lists contain one row per step (turn) of the game
+
+    """
+
+    #allocate player actions
+    lls_player_action = list()
+    logging.debug(f"JSON Steps: {len(ic_json['steps'])}")
+    #Scan every Step of the match (Turn)
+    n_last_step = len(ic_json["steps"])
+    #for n_step in range(1, n_last_step):
+    ls_old_observation = None
+    ls_observations = None
+    #scan each step (turn)
+    for c_step in ic_json['steps']:
+        #logging.debug(f"Step: {n_step} of {len(ic_json['steps'])}")
+        #logging.debug(f"Step: {c_step}")
+        #fetch step (turn) only present in player 0 observations
+        n_step = c_step[0]["observation"]["step"]
+
+        if (n_step != 50):
+            continue
+
+        #remember the previous observation
+        ls_old_observation = ls_observations
+        #allocate observations and actions for this turn
+        ls_observations = list()
+        ls_actions_p0 = list()
+        ls_actions_p1 = list()
+
+        #for all players
+        for c_player in c_step:
+            #logging.debug(f"Player: {c_player}")
+            #fetch index of player
+            n_id = c_player["observation"]["player"]
+            #if player is active or the game is about to be done
+            if c_player["status"] == "ACTIVE" or c_player["status"] == "DONE":
+                #from player 0
+                if (n_id == 0):
+                    #fetch observations
+                    ls_observations.append( c_player["observation"]["updates"])
+                    #fetch actions
+                    ls_actions_p0.append( c_player['action'] )
+                elif (n_id == 1):
+                    #fetch actions
+                    ls_actions_p1.append( c_player['action'] )
+                else:
+                    logging.critical(f"unknown player: {n_id} at step: {n_step}")
+
+                ls_actions = c_player['action']
+                #logging.debug(f"Step: {n_step} | Action: {ls_actions}")
+                #scan all actions
+                for s_action in ls_actions:
+                    #decompose the action into tokens
+                    ls_action_token = s_action.split(' ')
+                    logging.debug(f"Step: {n_step} | Player {n_id} | Action Tokens: {ls_action_token}")
+
+        #use the previous observation and the current actions to generate Perception and Action matricies
+
+
+    logging.debug(f"Step: {n_step}")
+    logging.debug(f"Observation: {ls_old_observation}")
+    logging.debug(f"Observation: {ls_observations}")
+    logging.debug(f"Action P0: {ls_actions_p0}")
+    logging.debug(f"Action P1: {ls_actions_p1}")
+    
+    return
+
+
+#--------------------------------------------------------------------------------------------------------------------------------
+#   MAIN
+#--------------------------------------------------------------------------------------------------------------------------------
+
+#   if interpreter has the intent of executing this file
+if __name__ == "__main__":
+
+    logging.basicConfig( level=logging.DEBUG, format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s' )
+
+    #load the json file containing the replay
+    c_json_replay = json_load( REPLAY_FOLDER, REPLAY_FILE )
+
+    #json_to_action( c_json_replay )    
+
+    json_to_perception_action( c_json_replay )
+    
+
     #from a list of Perception generates a .gif()
-    gify_list_perception( lc_perceptions, "replay.gif", GIF_FRAMERATE,in_max_frames=GIF_TURN_LIMIT )
+    #gify_list_perception( lc_perceptions, "replay.gif", GIF_FRAMERATE,in_max_frames=GIF_TURN_LIMIT )

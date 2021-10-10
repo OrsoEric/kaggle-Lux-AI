@@ -61,13 +61,22 @@ class Action():
 
     #----------------    Configurations    ----------------
 
-    #(3+7+5)*32*32 = 15*32*32
+    #(3+7)*32*32 = 10*32*32
     #enumerate state vector that describe game wide information, will bypass the spatial processing stage. Total 15 actions
     class E_OUTPUT_SPACIAL_MATRICIES( Enum ):
         #Citytile Actions. 3*32*32
         CITYTILE_RESEARCH = 0
         CITYTILE_BUILD_WORKER = auto()
         CITYTILE_BUILD_CART = auto()
+        #Unified unit actions. 7*32*32 e.g. cart can't comply with build city action.
+        UNIT_MOVE_NORTH = auto()
+        UNIT_MOVE_EAST = auto()
+        UNIT_MOVE_SOUTH = auto()
+        UNIT_MOVE_WEST = auto()
+        UNIT_TRANSFER_RESOURCE = auto()
+        UNIT_BUILD_CITY = auto()
+        UNIT_PILLAGE_ROAD = auto()        
+        """
         #Worker actions 7*32*32
         WORKER_MOVE_NORTH = auto()
         WORKER_MOVE_EAST = auto()
@@ -82,6 +91,7 @@ class Action():
         CART_MOVE_SOUTH = auto()
         CART_MOVE_WEST = auto()
         CART_TRANSFER_RESOURCE = auto()
+        """
 
 
     #----------------    Constructor    ----------------
