@@ -67,5 +67,22 @@
     "INPUT_CITYTILE_FUEL_OFFSET" : 1,
     "INPUT_UNIT_RESOURCE_OFFSET" : 1,
     "INPUT_COOLDOWN_OFFSET" : 0
+  },
+  "ACTIONS":{
+    "CITYTILE":{
+        "RESEARCH" : "r",
+        "BUILD_WORKER" : "bw",
+        "BUILD_CART" : "bc"
+    },
+    "WORKER" : {
+        "MOVE" : "m",
+        "TRANSFER_RESOURCE" : "t",
+        "BUILD_CITY" : "bcity",
+        "PILLAGE_ROAD" : "p"
+    },
+    "CART" : {
+        "MOVE" : "m",
+        "TRANSFER_RESOURCE" : "t"
+    }
   }
 }
