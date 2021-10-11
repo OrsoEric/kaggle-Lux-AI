@@ -76,22 +76,56 @@ class Action():
         UNIT_TRANSFER_RESOURCE = auto()
         UNIT_BUILD_CITY = auto()
         UNIT_PILLAGE_ROAD = auto()        
-        """
-        #Worker actions 7*32*32
-        WORKER_MOVE_NORTH = auto()
-        WORKER_MOVE_EAST = auto()
-        WORKER_MOVE_SOUTH = auto()
-        WORKER_MOVE_WEST = auto()
-        WORKER_TRANSFER_RESOURCE = auto()
-        WORKER_BUILD_CITY = auto()
-        WORKER_PILLAGE_ROAD = auto()
-        #Cart Actions 5*32*32
-        CART_MOVE_NORTH = auto()
-        CART_MOVE_EAST = auto()
-        CART_MOVE_SOUTH = auto()
-        CART_MOVE_WEST = auto()
-        CART_TRANSFER_RESOURCE = auto()
-        """
-
 
     #----------------    Constructor    ----------------
+
+    def __init__( self ):
+        """Constructor. Initialize mats and vars
+        """
+
+        #initialize class vars
+        if self.__init_vars():
+            logging.critical( f"Failed to initialize class vars" )
+
+        return
+
+    #----------------    Private Members    ----------------
+
+    def __init_vars( self ) -> bool:
+        """Initialize class vars
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+        self.mats = np.zeros( (len(Action.E_OUTPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
+
+        return False
+
+    #----------------    Protected Members    ----------------
+
+    #----------------    Public Members    ----------------
+
+    def _parse_agent_actions( self, ils_actions : list, id_units : dict ) -> bool:
+        """Parse a string of actions into an initialized Action class
+        An action is made by action tokens
+        e.g. ['bw', '15', '1'] -> inn_mat[Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_WORKER, 15, 1] = 1
+        e.g. ['m', 'u_2', 's'] -> id_units { u_2 : (11,12) } -> inn_mat[Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_SOUTH, 11, 12] = 1}
+        Args:
+            ils_actions (list(str)): list of string with a list of actions.
+                e.g. ["r 14 8", "m u_1 w"]
+            id_units (dict): dictionary of units.
+                "unit name" : (owner_id, unit_type, pos.x, pos.y)
+                { u_1 : (0, 1, 11, 2) }
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+
+        #scan all actions
+        for s_action in ils_actions:
+            #decompose the action into tokens
+            ls_action_token = s_action.split(' ')
+            
+
+
+        return False
+
+

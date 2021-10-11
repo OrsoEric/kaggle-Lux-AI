@@ -56,7 +56,7 @@ class Perception():
     (V) Coal matrix: as wood
     (V) Uranium matrix: as wood
     (V) Road matrix: road value per tile
-    ( ) Cooldown matrix: Bot's cooldown with negative sign, opponent's cooldown positive
+    (V) Cooldown matrix: Bot's cooldown with negative sign, opponent's cooldown positive
     """
     #----------------    Configurations    ----------------
 
@@ -106,33 +106,31 @@ class Perception():
 
     #----------------    Constructor    ----------------
 
-    def __init__( self, ic_game_state : Game ):
+    def __init__( self ):
         """Construct perception class based on a game state
-        Args:
-            ic_game_state (Game): Current game state
         """
 
-        #store locally the game state. Not visible from outside
-        self._c_map = ic_game_state.map
-        self._c_own = ic_game_state.players[ ic_game_state.id ]
-        self._c_enemy = ic_game_state.players[ ic_game_state.opponent_id ]
-        #tiles are shifted so that all map sizes are centered
-        self._w_shift = (GAME_CONSTANTS['MAP']['WIDTH_MAX'] - ic_game_state.map_width) // 2
-        self._h_shift = (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] - ic_game_state.map_height) // 2
-        #initialize perception matricies
-        self.mats = np.zeros( (len(Perception.E_INPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
-        logging.debug(f"Allocating input spacial matricies: {len(Perception.E_INPUT_SPACIAL_MATRICIES)} | shape: {self.mats.shape}")
-        #fill the perception matrix
-        self.invalid = self._generate_perception()
-        self.invalid |= self._generate_unit_resource_matrix()
-        self.invalid |= self._generate_raw_resource_road_matrix()
-        self.invalid |= self._generate_cooldown()
-
-        #allocate the status vector
-        self.status = np.zeros( len(Perception.E_INPUT_STATUS_VECTOR) )
-        self.status[ Perception.E_INPUT_STATUS_VECTOR.MAP_TURN.value ] = ic_game_state.turn
+        #initialize class vars
+        self.__init_vars()
 
         return
+
+    #----------------    Private Members    ---------------
+
+    def __init_vars( self ) -> bool:
+        """Initialize class vars
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+
+        #initialize to invalid
+        self.invalid = True
+        #allocate the status vector
+        self.status = np.zeros( len(Perception.E_INPUT_STATUS_VECTOR) )
+        #initialize perception matricies
+        self.mats = np.zeros( (len(Perception.E_INPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
+
+        return False
 
     #----------------    Overloads    ---------------
 
@@ -358,23 +356,50 @@ class Perception():
         #logging.debug(f"CD: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value].sum()}") 
         return False
 
-    def _generate_perception( self ) -> bool:
-        """Runs the generation of all perception matricies
+    def _generate_status_vector( self ):
+        """Generate the status vector to be fed in input of the ML
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+
+        #
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.MAP_TURN.value ] = self.n_turn
+
+        return False
+    
+    #----------------    Public    ---------------
+
+    def from_game( self, ic_game_state : Game ) -> bool:
+        """fill the Perception class from a Game() class
+        Args:
+            ic_game_state (Game): Current game state
         Returns:
             bool: False=OK | True=FAIL
         """
         
-        if self._generate_citytile_fuel_matrix():
-            return True
+        #turn index
+        self.n_turn = ic_game_state.turn
+
+        #store locally the game state. Not visible from outside
+        self._c_map = ic_game_state.map
+        self._c_own = ic_game_state.players[ ic_game_state.id ]
+        self._c_enemy = ic_game_state.players[ ic_game_state.opponent_id ]
+        #tiles are shifted so that all map sizes are centered
+        self._w_shift = (GAME_CONSTANTS['MAP']['WIDTH_MAX'] -ic_game_state.map_width) // 2
+        self._h_shift = (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] -ic_game_state.map_height) // 2
+
+        #reset to valid
+        self.invalid = False
+        #fill the ML input status vector
+        self.invalid |= self._generate_status_vector()
+        #fill the ML input spacial matricies
+        self.invalid |= self._generate_perception()
+        self.invalid |= self._generate_unit_resource_matrix()
+        self.invalid |= self._generate_raw_resource_road_matrix()
+        self.invalid |= self._generate_cooldown()
+
 
         return False
-
-    #----------------    Public    ---------------
-
-    def compute_perception( self ):
-
-
-        return
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   Save/Load Pickle

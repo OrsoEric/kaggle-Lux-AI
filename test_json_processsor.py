@@ -92,22 +92,6 @@ def json_observation( ic_json ):
     #return a list of oservations, one per Step (turn)
     return lc_observations
 
-
-def parse_action_tokens( inn_mat : np.array,  ils_action_token : list, id_units : dict ) -> bool:
-    """Parse a list of tokens as actions into an output action matrix. If unable to parse, returns True
-    e.g. ['bw', '15', '1'] -> inn_mat[Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_WORKER, 15, 1] = 1
-    e.g. ['m', 'u_2', 's'] -> id_units { u_2 : (11,12) } -> inn_mat[Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_SOUTH, 11, 12] = 1}
-    Args:
-        inn_mat (np.darray): BOT output matrix with the actions for this turn
-        ils_action_token (list): Tokens to be parsed
-        id_units (dict): Dictionary with association unit_name -> position
-    Returns:
-        bool: False=OK | True=FAIL
-    """
-
-
-    return False
-
 def json_to_action( ic_json, id_units : dict ):
     """From a replay.json extract all actions of the player with a given index
     output is a list of list of strings in the form. One list of string per step.
@@ -264,11 +248,7 @@ def json_to_perception_action( ic_json ):
 
                 ls_actions = c_player['action']
                 #logging.debug(f"Step: {n_step} | Action: {ls_actions}")
-                #scan all actions
-                for s_action in ls_actions:
-                    #decompose the action into tokens
-                    ls_action_token = s_action.split(' ')
-                    logging.debug(f"Step: {n_step} | Player {n_id} | Action Tokens: {ls_action_token}")
+                
 
         #use the previous observation and the current actions to generate Perception and Action matricies
 
@@ -296,7 +276,7 @@ if __name__ == "__main__":
 
     #json_to_action( c_json_replay )    
 
-    json_to_perception_action( c_json_replay )
+    #json_to_perception_action( c_json_replay )
     
 
     #from a list of Perception generates a .gif()
