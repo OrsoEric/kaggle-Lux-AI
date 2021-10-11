@@ -39,7 +39,7 @@ REPLAY_FILE = "27879876.json"
 
 GIF_FRAMERATE = 10
 #GIF_TURN_LIMIT = -1
-GIF_TURN_LIMIT = 10
+GIF_TURN_LIMIT = 5
 
 TEST_JSON_TO_PERCEPTION_GIF = True
 
@@ -286,7 +286,7 @@ if __name__ == "__main__":
 
         #logging.debug(lc_perceptions[0].mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value])
         #from a list of Perception generates a .gif()
-        gify_list_perception( lc_perceptions, "replay.gif", GIF_FRAMERATE,in_max_frames=GIF_TURN_LIMIT )
+        #gify_list_perception( lc_perceptions, "replay.gif", GIF_FRAMERATE,in_max_frames=GIF_TURN_LIMIT )
 
 
 

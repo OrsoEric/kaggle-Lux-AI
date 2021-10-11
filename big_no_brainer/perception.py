@@ -76,15 +76,13 @@ class Perception():
     #enumerate state vector that describe game wide information, will bypass the spatial processing stage
     class E_INPUT_STATUS_VECTOR( Enum ):
         MAP_TURN = 0
-        MAP_IS_NIGHT = auto(),
-        OWN_RESEARCH = auto(),
-        OWN_RESEARCHED_COAL = auto(),
-        OWN_RESEARCHED_URANIUM = auto(),
-        ENEMY_RESEARCH = auto(),
-        ENEMY_RESEARCHED_COAL = auto(),
-        ENEMY_RESEARCHED_URANIUM = auto(),
-        #number of global state variables
-        NUM = auto(),
+        MAP_IS_NIGHT = auto()
+        OWN_RESEARCH = auto()
+        OWN_RESEARCHED_COAL = auto()
+        OWN_RESEARCHED_URANIUM = auto()
+        ENEMY_RESEARCH = auto()
+        ENEMY_RESEARCHED_COAL = auto()
+        ENEMY_RESEARCHED_URANIUM = auto()
 
 	#NOTE: the enum were tuple because i put a coma like a c++ enum.
     #enumerate possible types of cell {5+6+12+8=31} * {Width} * {Height}
@@ -366,6 +364,30 @@ class Perception():
 
         return False
     
+    def _generate_dictionary_unit( self ) -> bool:
+        """Generates a dictionary of units in the form:
+        {
+            u_1 : ( 11, 17),
+            u_5 : ( 12, 17),
+        }
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+
+        d_unit = dict()
+
+        #Scan all Own Unit
+        for c_unit in self._c_own.units:
+            d_unit[c_unit.id] = ( c_unit.pos.x, c_unit.pos.y )
+            
+        #Scan all Enemy Unit
+        for c_unit in self._c_enemy.units:
+            d_unit[c_unit.id] = ( c_unit.pos.x, c_unit.pos.y )
+        
+        self.d_unit = d_unit
+        logging.debug(f"Unit Dictionary: {d_unit}")
+        return False
+
     #----------------    Public    ---------------
 
     def from_game( self, ic_game_state : Game ) -> bool:
@@ -395,7 +417,7 @@ class Perception():
         self.invalid |= self._generate_unit_resource_matrix()
         self.invalid |= self._generate_raw_resource_road_matrix()
         self.invalid |= self._generate_cooldown()
-
+        self.invalid |= self._generate_dictionary_unit()
 
         return False
 
@@ -469,6 +491,7 @@ def gify_list_perception( ilc_list_perception : list, is_filename : str, in_fram
         #CityTile/Fuel Mat
         data_citytile_fuel = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value ]
         ax1.title.set_text(f"Citytile/Fuel {data_citytile_fuel.sum()}")
+        #sns.heatmap( data_citytile_fuel, center=0, vmin=-100, vmax=100, ax=ax1, cbar=False, cmap="coolwarm" )
         sns.heatmap( data_citytile_fuel, center=0, vmin=-100, vmax=100, ax=ax1, cbar=False )
 
         data_worker_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.WORKER_RESOURCE.value ]
