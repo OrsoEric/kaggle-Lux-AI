@@ -3,8 +3,10 @@
 #   Perception scrubbing and gif Operational 
 #
 #       2021-10-10
+#   Defining action class. Dig deep on how the json is structured
+#       2021-10-11
+#   Refactor perception class to work from both a Game class or a list of updates directly
 #
-
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   IMPORTS
@@ -36,7 +38,10 @@ REPLAY_FOLDER = "replays"
 REPLAY_FILE = "27879876.json"
 
 GIF_FRAMERATE = 10
-GIF_TURN_LIMIT = -1
+#GIF_TURN_LIMIT = -1
+GIF_TURN_LIMIT = 10
+
+TEST_JSON_TO_PERCEPTION_GIF = True
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   FILE
@@ -187,7 +192,8 @@ def json_to_perceptions( ic_json ):
     lc_perceptions = list()
     #from a list of Game() generates a list of Perception()
     for c_gamestate in lc_gamestates:
-        c_perception = Perception( c_gamestate )
+        c_perception = Perception()
+        c_perception.from_game( c_gamestate )
         logging.debug(f"Game: {c_gamestate}")
         logging.debug(f"Step: {c_perception.status[Perception.E_INPUT_STATUS_VECTOR.MAP_TURN.value]}  | Perceptions : {c_perception}")
         lc_perceptions.append( c_perception )
@@ -274,10 +280,19 @@ if __name__ == "__main__":
     #load the json file containing the replay
     c_json_replay = json_load( REPLAY_FOLDER, REPLAY_FILE )
 
+    if TEST_JSON_TO_PERCEPTION_GIF == True:
+        #from a json extract a list of perceptions, one per turn
+        lc_perceptions = json_to_perceptions( c_json_replay )
+
+        #logging.debug(lc_perceptions[0].mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value])
+        #from a list of Perception generates a .gif()
+        gify_list_perception( lc_perceptions, "replay.gif", GIF_FRAMERATE,in_max_frames=GIF_TURN_LIMIT )
+
+
+
     #json_to_action( c_json_replay )    
 
     #json_to_perception_action( c_json_replay )
     
 
-    #from a list of Perception generates a .gif()
-    #gify_list_perception( lc_perceptions, "replay.gif", GIF_FRAMERATE,in_max_frames=GIF_TURN_LIMIT )
+    

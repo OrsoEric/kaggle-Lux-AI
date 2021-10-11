@@ -314,8 +314,9 @@ class Perception():
             if self._check_bounds_pos( c_pos ) == True:
                 logging.critical(f"Position is invalid {c_pos}")
                 return True            
-            
-            self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] += in_cooldown
+            #accumulate cooldown in the cooldown matrix
+            self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] += n_fill_value
+            #logging.debug(f"Pos {self._w_shift +c_pos.x} {self._h_shift +c_pos.y} | {ix_is_enemy} | {n_fill_value}")
 
             return False
 
@@ -323,13 +324,11 @@ class Perception():
         for c_unit in self._c_own.units:
             #fit cooldown with +sign for resource
             push_cooldown( c_unit.pos, c_unit.cooldown, False )
-            pass
             
         #Scan all Enemy Unit
         for c_unit in self._c_enemy.units:
             #fit cooldown with +sign for resource
             push_cooldown( c_unit.pos, c_unit.cooldown, True )
-            pass
 
         #scan all Own Cities in the dictionary of cities
         for s_city_name, c_city in self._c_own.cities.items():
@@ -393,7 +392,6 @@ class Perception():
         #fill the ML input status vector
         self.invalid |= self._generate_status_vector()
         #fill the ML input spacial matricies
-        self.invalid |= self._generate_perception()
         self.invalid |= self._generate_unit_resource_matrix()
         self.invalid |= self._generate_raw_resource_road_matrix()
         self.invalid |= self._generate_cooldown()
@@ -498,7 +496,8 @@ def gify_list_perception( ilc_list_perception : list, is_filename : str, in_fram
 
         data_cooldown = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value ]
         ax32.title.set_text(f"Cooldown {data_cooldown.sum()}")
-        sns.heatmap( data_cooldown, center=0, vmin=0, vmax=GAME_CONSTANTS["PARAMETERS"]["CITY_ACTION_COOLDOWN"], ax=ax32, cbar=False )
+        n_cooldown_limit = GAME_CONSTANTS["PERCEPTION"]["INPUT_COOLDOWN_OFFSET"] +GAME_CONSTANTS["PARAMETERS"]["CITY_ACTION_COOLDOWN"]
+        sns.heatmap( data_cooldown, center=0, vmin=-n_cooldown_limit, vmax=n_cooldown_limit, ax=ax32, cbar=False )
 
         return [ data_citytile_fuel.sum(), data_worker_resource.sum() ]
 
