@@ -15,6 +15,13 @@
 #   Action translates a 
 #
 
+##  History
+#       2021-10-12
+#   Action operational
+
+##  TODO
+#   add shift to output matrix
+
 #--------------------------------------------------------------------------------------------------------------------------------
 #   IMPORT
 #--------------------------------------------------------------------------------------------------------------------------------
@@ -83,9 +90,8 @@ class Action():
 
     #----------------    Constructor    ----------------
 
-    def __init__( self, ic_json : json, ild_units : list, in_player : int ):
+    def __init__( self, in_map_size : int ):
         """Constructor. Initialize mats and vars
-
         Args:
             ic_json (json): opened replay.json
             ild_units (list): list of dictionaries of units and their position. required to decode actions. one per turn, 360 turn per game.
@@ -94,91 +100,57 @@ class Action():
         """
 
         #initialize class vars
-        if self.__init_vars():
+        if self.__init_vars( in_map_size ):
             logging.critical( f"Failed to initialize class vars" )
-
-        #from a json generate a list of list of actions, one list of actions for a given player
-        lls_actions  = self._generate_list_action( ic_json, in_player )
-        #from a list of list of string action and a list dictionaries of units fill the output mats
-        self._fill_action_mats( ild_units, lls_actions )
 
         return
 
+    #----------------    Overloads    ----------------
+
+    def __str__(self) -> str:
+        ln_sum = list()
+        for e_header in Action.E_OUTPUT_SPACIAL_MATRICIES:
+            ln_sum.append( self.mats[e_header.value].sum() ) 
+        return f"Action | {ln_sum}"
+
     #----------------    Private Members    ----------------
 
-    def __init_vars( self ) -> bool:
+    def __init_vars( self, in_map_size : int ) -> bool:
         """Initialize class vars
         Returns:
             bool: False=OK | True=FAIL
         """
+
         self.mats = np.zeros( (len(Action.E_OUTPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
 
-        #self._w_shift = (GAME_CONSTANTS['MAP']['WIDTH_MAX'] -ic_game_state.map_width) // 2
-        #self._h_shift = (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] -ic_game_state.map_height) // 2
+        self._set_map_size( in_map_size )
+
+        return False
+
+    def __accumulate_mat( self, n_index : int, in_x : int, in_y : int ) -> bool:
+
+        n_x = int(self._w_shift +in_x)
+        n_y = int(self._h_shift +in_y)
+        if n_x < 0 or n_x > GAME_CONSTANTS['MAP']['WIDTH_MAX']:
+            logging.error(f"Bad X index: {n_x}")
+            return True
+
+        if n_y < 0 or n_y > GAME_CONSTANTS['MAP']['HEIGHT_MAX']:
+            logging.error(f"Bad X index: {n_x}")
+            return True
+        #logging.debug(f"{n_index} {n_x} {n_y}")
+
+        self.mats[n_index, n_x, n_y ] += 1
 
         return False
 
     #----------------    Protected Members    ----------------
 
-    def _generate_list_action( self, ic_json : json, in_player : int ) ->list:
-        """AI is creating summary for _generate_list_action
-        Args:
-            ic_json (json): opened replay.json
-            in_player (int): index of the player for which actions are to be computed. two players in a game
-        Returns:
-            list: list of string action. e.g.
-                [["r 14 8", "m u_1 w"]
-                [""]
-                ["m u_1 w"]]
-        """
-        #allocate player actions
-        lls_player_action = list()
-        logging.debug(f"JSON Steps: {len(ic_json['steps'])}")
-        #Scan every Step of the match (Turn)
-        n_last_step = len(ic_json["steps"])
-        #for n_step in range(1, n_last_step):
-        #scan each step (turn)
-        for c_step in ic_json['steps']:
-            #logging.debug(f"Step: {n_step} of {len(ic_json['steps'])}")
-            #logging.debug(f"Step: {c_step}")
-            #fetch step (turn) only present in player 0 observations
-            n_step = c_step[0]["observation"]["step"]
-            #for all players
-            for c_player in c_step:
-                #logging.debug(f"Player: {c_player}")
-                #fetch index of player
-                n_id = c_player["observation"]["player"]
-                #if player the indexed one, is active or the game is about to be done
-                if n_id == in_player and (c_player["status"] == "ACTIVE" or c_player["status"] == "DONE"):
-                    #fetch the list of actions the player took in the previous turn
-                    #From JSON, From Steps (list of turns), from a given step (turn index), from player 0, is player is active (not dead)
-                    ls_actions = c_player['action']
-                    #logging.debug(f"Step: {n_step} | Action: {ls_actions}")
-                    #append to list of list of string actions
-                    lls_player_action.append( ls_actions )
-
-        logging.debug(f"Player {in_player} | Action strings decoded: {len(lls_player_action)}")
-
-        return lls_player_action
-
-    def _fill_action_mats( self, ild_units : list, ills_actions : list ) -> bool:
-        #check input
-        if len(ild_units) != GAME_CONSTANTS["PARAMETERS"]["MAX_DAYS"] or len(ills_actions) != GAME_CONSTANTS["PARAMETERS"]["MAX_DAYS"]+1:
-            logging.error(f"Unexpected input length | Dictionary Units: {len(ild_units)} | List of string actions: {len(ills_actions)}")
-
-        #drop first string action. Perception(Step 0) <=> Action(Step = 1)
-        ills_actions.pop( 0 )
-        #scan dictionary of units and string action of the same turn
-        for d_units, ls_actions in zip( ild_units, ills_actions ):
-            #logging.debug(f" Dictionary: {d_units} | String actions: {ls_actions}")
-            #finally call the parser that decodes a list of string actions filling the output mat
-            if self._parse_agent_actions( d_units, ls_actions ) == True:
-                logging.error(f"failed to parse string actions: {ls_actions}")
-                return True
+    def _set_map_size( self, in_map_size : int ) -> bool:
+        self._w_shift = (GAME_CONSTANTS['MAP']['WIDTH_MAX'] -in_map_size) // 2
+        self._h_shift = (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] -in_map_size) // 2
 
         return False
-
-    #----------------    Public Members    ----------------
 
     def _parse_agent_actions( self, id_units : dict, ils_actions : list ) -> bool:
         """Parse a string of actions into an initialized Action class by filling the mats
@@ -205,21 +177,140 @@ class Action():
             if s_header == "":
                 logging.debug("NOP")
                 pass
+            
             #Citytile Research "r x y"
             elif s_header == GAME_CONSTANTS["ACTION"]["CITYTILE"]["RESEARCH"]:
                 if (len(ls_action_token) != 3):
-                    logging.error(f'Expected 3 tokens on action: { GAME_CONSTANTS["ACTION"]["CITYTILE"]["RESEARCH"] } but got {len(ls_action_token)} instead.')
-                
+                    logging.error(f'Expected 3 tokens on action: { s_header } but got {len(ls_action_token)} instead.')
+                    return True
+                #Fetch action arguments
                 n_x = int(ls_action_token[1])
                 n_y = int(ls_action_token[2])
-                logging.debug(f"R {n_x} {n_y}")
-                self.mats[Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_RESEARCH.value, n_x, n_y] += 1
+                #logging.debug(f"RESEARCH {n_x} {n_y}")
+                self.__accumulate_mat( Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_RESEARCH.value, n_x, n_y ) 
+
+            #Citytile Build Worker "bw x y"
+            elif s_header == GAME_CONSTANTS["ACTION"]["CITYTILE"]["BUILD_WORKER"]:
+                if (len(ls_action_token) != 3):
+                    logging.error(f'Expected 3 tokens on action: { s_header } but got {len(ls_action_token)} instead.')
+                    return True
+                #Fetch action arguments
+                n_x = int(ls_action_token[1])
+                n_y = int(ls_action_token[2])
+                #logging.debug(f"BUILD_WORKER {n_x} {n_y}")
+                self.__accumulate_mat( Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_WORKER.value, n_x, n_y ) 
+            
+            #Citytile Build Worker "bc x y"
+            elif s_header == GAME_CONSTANTS["ACTION"]["CITYTILE"]["BUILD_CART"]:
+                if (len(ls_action_token) != 3):
+                    logging.error(f'Expected 3 tokens on action: { s_header } but got {len(ls_action_token)} instead.')
+                    return True
+                #Fetch action arguments
+                n_x = int(ls_action_token[1])
+                n_y = int(ls_action_token[2])
+                #logging.debug(f"BUILD_CART {n_x} {n_y}")
+                self.__accumulate_mat( Action.E_OUTPUT_SPACIAL_MATRICIES.BUILD_CART.value, n_x, n_y ) 
+                
+            #Unit Move
+            elif s_header == GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]:
+                if (len(ls_action_token) != 3):
+                    logging.error(f'Expected 3 tokens on action: { s_header } but got {len(ls_action_token)} instead.')
+                    return True
+                #Fetch action arguments
+                s_unit_id = ls_action_token[1]
+                s_move_direction = ls_action_token[2]
+                #launch a search inside the dictionary of units
+                if s_unit_id in id_units:
+                    #get a tuple with the position of unit
+                    t_pos = id_units[s_unit_id]
+                else:
+                    logging.error(f'Unit { s_unit_id } not found in unit dictionary: {id_units}')
+                    return True
+                #n_mat_index = -1
+                #the direction encodes the destination matrix
+                if s_move_direction == GAME_CONSTANTS["DIRECTIONS"]["NORTH"]:
+                    n_mat_index = Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_NORTH.value
+                elif s_move_direction == GAME_CONSTANTS["DIRECTIONS"]["EAST"]:
+                    n_mat_index = Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_EAST.value
+                elif s_move_direction == GAME_CONSTANTS["DIRECTIONS"]["SOUTH"]:
+                    n_mat_index = Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_SOUTH.value
+                elif s_move_direction == GAME_CONSTANTS["DIRECTIONS"]["WEST"]:
+                    n_mat_index = Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_WEST.value
+                elif s_move_direction == GAME_CONSTANTS["DIRECTIONS"]["CENTER"]:
+                    #center move does not need to update a move matrix
+                    continue
+                else:
+                    logging.error(f"Move Direction is unknown { s_move_direction }")
+                    return True
+                #logging.debug(f"Worker {s_unit_id} | Position {t_pos} | Move {s_move_direction}")
+                #update the mat
+                self.__accumulate_mat( n_mat_index, t_pos[0], t_pos[1] ) 
+
+            #Unit Transfer Resource
+            elif s_header == GAME_CONSTANTS["ACTION"]["UNIT"]["TRANSFER_RESOURCE"]:
+                if (len(ls_action_token) != 4):
+                    logging.error(f'Expected 4 tokens on action: { s_header } but got {len(ls_action_token)} instead.')
+                    return True
+
+                #Fetch action arguments
+                s_source_unit_id = ls_action_token[1]
+                s_dest_unit_id = ls_action_token[2]
+                s_resource_type = ls_action_token[3]
+                n_resource_amount = ls_action_token[4]
+
+                logging.error(f"Transfer Action not implemented... {s_source_unit_id} {s_dest_unit_id} {s_resource_type} {n_resource_amount}")
+                return True
+
+            #Unit Build City
+            elif s_header == GAME_CONSTANTS["ACTION"]["UNIT"]["BUILD_CITY"]:
+                if (len(ls_action_token) != 2):
+                    logging.error(f'Expected 2 tokens on action: { s_header } but got {len(ls_action_token)} instead.')
+                    return True
+                #Fetch action arguments
+                s_unit_id = ls_action_token[1]
+                #launch a search inside the dictionary of units
+                if s_unit_id not in id_units:
+                    logging.error(f'Unit { s_unit_id } not found in unit dictionary: {id_units}')
+                    return True
+                else:
+                    #get a tuple with the position of unit
+                    t_pos = id_units[s_unit_id]
+                #logging.debug(f"Worker {s_unit_id} | Position {t_pos} | Build City")
+                #update the mat
+                self.__accumulate_mat( Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_BUILD_CITY.value, t_pos[0], t_pos[1] ) 
+
+            #Unit Pillage
+            elif s_header == GAME_CONSTANTS["ACTION"]["UNIT"]["PILLAGE_ROAD"]:
+                if (len(ls_action_token) != 2):
+                    logging.error(f'Expected 2 tokens on action: { s_header } but got {len(ls_action_token)} instead.')
+                    return True
+                #Fetch action arguments
+                s_unit_id = ls_action_token[1]
+                #launch a search inside the dictionary of units
+                if s_unit_id not in id_units:
+                    logging.error(f'Unit { s_unit_id } not found in unit dictionary: {id_units}')
+                    return True
+                else:
+                    #get a tuple with the position of unit
+                    t_pos = id_units[s_unit_id]
+                #logging.debug(f"Worker {s_unit_id} | Position {t_pos} | Pillage Road")
+                #update the mat
+                self.__accumulate_mat( Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_PILLAGE_ROAD.value, t_pos[0], t_pos[1] ) 
+
+
             else:
                 logging.debug(f"Unknown header: {s_header}")
-                pass
+                return True
                 
-
-        logging.debug(f"total research: {self.mats[Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_RESEARCH.value].sum()}")
         return False
 
+    #----------------    Public Members    ----------------
 
+    def fill_mats( self, id_units : dict, ils_actions : list ):
+
+        #finally call the parser that decodes a list of string actions filling the output mat
+        if self._parse_agent_actions( id_units, ils_actions ) == True:
+            logging.error(f"failed to parse string actions: {ils_actions}")
+            return True
+
+        return False

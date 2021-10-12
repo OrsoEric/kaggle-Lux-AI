@@ -36,12 +36,6 @@ from lux.game import Game
 from lux.game_map import Position
 from lux.game_objects import Unit
 
-#plot
-import matplotlib.pyplot as plt
-import seaborn as sns
-#convert input matricies into .gif
-import matplotlib.animation as animation
-
 #--------------------------------------------------------------------------------------------------------------------------------
 #   Perception
 #--------------------------------------------------------------------------------------------------------------------------------
@@ -75,7 +69,8 @@ class Perception():
     
     #enumerate state vector that describe game wide information, will bypass the spatial processing stage
     class E_INPUT_STATUS_VECTOR( Enum ):
-        MAP_TURN = 0
+        MAP_SIZE = 0
+        MAP_TURN = auto()
         MAP_IS_NIGHT = auto()
         OWN_RESEARCH = auto()
         OWN_RESEARCHED_COAL = auto()
@@ -360,7 +355,15 @@ class Perception():
         """
 
         #
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.MAP_SIZE.value ] = self._c_map.width
         self.status[ Perception.E_INPUT_STATUS_VECTOR.MAP_TURN.value ] = self.n_turn
+
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.OWN_RESEARCH.value ] = self._c_own.research_points
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.OWN_RESEARCHED_COAL.value ] = self._c_own.researched_coal()
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.OWN_RESEARCHED_URANIUM.value ] = self._c_own.researched_uranium()
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.ENEMY_RESEARCH.value ] = self._c_enemy.research_points
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.ENEMY_RESEARCHED_COAL.value ] = self._c_enemy.researched_coal()
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.ENEMY_RESEARCHED_URANIUM.value ] = self._c_enemy.researched_uranium()
 
         return False
     
@@ -465,87 +468,3 @@ def load_perceptions( is_file_name : str ):
         return None
 
     return lc_perceptions
-
-#--------------------------------------------------------------------------------------------------------------------------------
-#   Save Heatmaps as Gifs
-#--------------------------------------------------------------------------------------------------------------------------------
-
-def gify_list_perception( ilc_list_perception : list, is_filename : str, in_framerate : int, in_max_frames = -1 ):
-    """Turn a list of perceptions into a Gif
-    because of compression, there are going to be fewer frames, but the delay in them ensures the movie represent the correct output
-    Args:
-        ilc_list_perception (list): list of Perception classes
-        is_filename (str): name of the output gif. must be a .gif
-        in_framerate (int): Framerate in FPS
-        in_max_frames(int): -1=gify ALL the frames | >0 gify only up to a given number of frames
-    """
-    logging.debug(f"saving heatmaps...")
-    dimension = (32, 32)
-    fig, axes = plt.subplots( nrows=3, ncols=3, figsize=(12, 12) )
-    ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax31, ax32, ax33)) = axes
-    
-    def draw_heatmap( ic_perception: Perception ):
-        #TODO only first time draw the colorbar
-
-        #plt.clf()
-        
-        #CityTile/Fuel Mat
-        data_citytile_fuel = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value ]
-        ax1.title.set_text(f"Citytile/Fuel {data_citytile_fuel.sum()}")
-        #sns.heatmap( data_citytile_fuel, center=0, vmin=-100, vmax=100, ax=ax1, cbar=False, cmap="coolwarm" )
-        sns.heatmap( data_citytile_fuel, center=0, vmin=-100, vmax=100, ax=ax1, cbar=False )
-
-        data_worker_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.WORKER_RESOURCE.value ]
-        ax2.title.set_text(f"Worker/Resource {data_worker_resource.sum()}")
-        sns.heatmap( data_worker_resource, center=0, vmin=-100, vmax=100, ax=ax2, cbar=False )
-        
-        data_cart_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CART_RESOURCE.value ]
-        ax3.title.set_text(f"Cart/Resource {data_cart_resource.sum()}")
-        sns.heatmap( data_cart_resource, center=0, vmin=-100, vmax=100, ax=ax3, cbar=False )
-        
-        data_raw_wood = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value ]
-        data_raw_coal = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_COAL.value ]
-        data_raw_uranium = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_URANIUM.value ]
-        ax4.title.set_text(f"Raw Wood {data_raw_wood.sum()}")
-        ax5.title.set_text(f"Raw Coal {data_raw_coal.sum()}")
-        ax6.title.set_text(f"Raw Uranium {data_raw_uranium.sum()}")
-        sns.heatmap( data_raw_wood, center=0, vmin=-100, vmax=100, ax=ax4, cbar=False )
-        sns.heatmap( data_raw_coal, center=0, vmin=-100, vmax=100, ax=ax5, cbar=False )
-        sns.heatmap( data_raw_uranium, center=0, vmin=-100, vmax=100, ax=ax6, cbar=False )
-        
-        #logging.info(f"ROADS: {Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value} | shape: {ic_perception.mats.shape}")
-        data_road = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value ]
-        ax31.title.set_text(f"Roads {data_road.sum()}")
-        sns.heatmap( data_road, center=0, vmin=0, vmax=6, ax=ax31, cbar=False )
-
-        data_cooldown = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value ]
-        ax32.title.set_text(f"Cooldown {data_cooldown.sum()}")
-        n_cooldown_limit = GAME_CONSTANTS["PERCEPTION"]["INPUT_COOLDOWN_OFFSET"] +GAME_CONSTANTS["PARAMETERS"]["CITY_ACTION_COOLDOWN"]
-        sns.heatmap( data_cooldown, center=0, vmin=-n_cooldown_limit, vmax=n_cooldown_limit, ax=ax32, cbar=False )
-
-        return [ data_citytile_fuel.sum(), data_worker_resource.sum() ]
-
-
-    draw_heatmap( ilc_list_perception[0] )
-
-    def init():
-        
-        draw_heatmap( ilc_list_perception[0] )
-
-    def animate(i):
-        fig.suptitle(f"TURN: {i}", fontsize=16)
-        l_sum = draw_heatmap( ilc_list_perception[i] )
-        logging.info(f"generating heatmap{i} ... {l_sum}")
-
-    if (in_max_frames < 0):
-        n_frames = len(ilc_list_perception)
-    elif in_max_frames >= len(ilc_list_perception):
-        n_frames = len(ilc_list_perception)
-    else:
-        n_frames = in_max_frames
-
-    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=n_frames, repeat=False, save_count=n_frames)
-    anim.save( is_filename, writer='pillow', fps=in_framerate )
-    logging.debug(f"saving heatmaps as: {is_filename} | total frames: {n_frames}")
-
-    return
