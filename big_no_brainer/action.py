@@ -316,6 +316,9 @@ class Action():
         """
         #allocate list of stringactions for this step(turn) for citytiles
         ls_actions_citytile = list()
+        #allocate list of citytile action index matricies
+        ln_citytile_action_index = [ Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_RESEARCH.value, Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_WORKER.value, Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_CART.value ]
+
         #scan each cell of the map
         for n_x, n_y in product( range(self.n_map_size), range(self.n_map_size) ):
             #apply shift
@@ -325,7 +328,7 @@ class Action():
             n_max_q_score = GAME_CONSTANTS["ACTION"]["TRANSLATE"]["MIN_SCORE"]
             n_max_q_index = -1
             #search the highest rated action in the three citytile output spacial matricies
-            for n_index in [ Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_RESEARCH.value, Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_WORKER.value, Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_CART.value  ]:
+            for n_index in ln_citytile_action_index:
                 #detect the best score, if any
                 n_score = self.mats[ n_index, n_x_shift, n_y_shift ]
                 if n_score > n_max_q_score:
@@ -335,6 +338,7 @@ class Action():
             if n_max_q_index < 0:
                 #do nothing
                 pass
+
             else:
                 #emit CITYTILE_RESEARCH
                 if n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_RESEARCH.value:
@@ -349,6 +353,13 @@ class Action():
                 #add action string to list of actionstrings for this turn
                 ls_actions_citytile.append(s_action)
 
+            #Reverse Translation. Signal which action has been translated
+            for n_index_reverse in ln_citytile_action_index:
+                if (n_index_reverse != n_max_q_index):
+                    self.mats[ n_index_reverse, n_x_shift, n_y_shift ] = 0
+                else:
+                    self.mats[ n_index_reverse, n_x_shift, n_y_shift ] = 1
+                    
         return ls_actions_citytile
 
     def _translate_unit_actions( self ) -> list:
