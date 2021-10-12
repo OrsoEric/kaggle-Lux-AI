@@ -104,7 +104,7 @@ def json_to_action( ic_json, id_units : dict ):
     output is a list of list of strings in the form. One list of string per step.
     each list of string list all actions the player gave to it's citytile units
     [["r 14 8", "m u_1 w"]
-    ["", ""]
+    [""]
     ["m u_1 w"]]
 
     Args:
@@ -261,7 +261,6 @@ def json_to_perception_action( ic_json ):
                 
 
         #use the previous observation and the current actions to generate Perception and Action matricies
-
 
     logging.debug(f"Step: {n_step}")
     logging.debug(f"Observation: {ls_old_observation}")

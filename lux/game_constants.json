@@ -68,7 +68,7 @@
     "INPUT_UNIT_RESOURCE_OFFSET" : 1,
     "INPUT_COOLDOWN_OFFSET" : 0
   },
-  "ACTIONS":{
+  "ACTION":{
     "CITYTILE":{
         "RESEARCH" : "r",
         "BUILD_WORKER" : "bw",
