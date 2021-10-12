@@ -79,6 +79,9 @@
         "TRANSFER_RESOURCE" : "t",
         "BUILD_CITY" : "bcity",
         "PILLAGE_ROAD" : "p"
+    },
+    "TRANSLATE" : {
+      "MIN_SCORE" : 0.0
     }
   }
 }

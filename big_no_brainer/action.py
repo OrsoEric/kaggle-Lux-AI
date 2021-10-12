@@ -147,8 +147,11 @@ class Action():
     #----------------    Protected Members    ----------------
 
     def _set_map_size( self, in_map_size : int ) -> bool:
-        self._w_shift = (GAME_CONSTANTS['MAP']['WIDTH_MAX'] -in_map_size) // 2
-        self._h_shift = (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] -in_map_size) // 2
+        #size of the map in cells. THe map is square
+        self.n_map_size = int(in_map_size)
+        #set the offset. all map sizes uses max size and are shifted to be centered. Helps neural network convolution to generalize.
+        self._w_shift = int( (GAME_CONSTANTS['MAP']['WIDTH_MAX'] -in_map_size) // 2 )
+        self._h_shift = int( (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] -in_map_size) // 2 )
 
         return False
 
@@ -297,12 +300,65 @@ class Action():
                 #update the mat
                 self.__accumulate_mat( Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_PILLAGE_ROAD.value, t_pos[0], t_pos[1] ) 
 
-
             else:
                 logging.debug(f"Unknown header: {s_header}")
                 return True
                 
         return False
+
+    def _translate_citytile_actions( self ) -> list:
+        """Translates citytile actions into a list of string actions to be fed to the game engine
+        Requires output spacial matricies
+        @TODO add a dictionary of citytiles to check if a city exist
+        @TODO check action against cooldown perception matrix to see if an action is valid
+            list: list of citytile string actions to be fed to the game engine
+                e.g. ["r 14 8", "bw 11 0", "bc 1 1"]
+        """
+        #allocate list of stringactions for this step(turn) for citytiles
+        ls_actions_citytile = list()
+        #scan each cell of the map
+        for n_x, n_y in product( range(self.n_map_size), range(self.n_map_size) ):
+            #apply shift
+            n_x_shift = n_x +self._w_shift
+            n_y_shift = n_y +self._h_shift
+
+            n_max_q_score = GAME_CONSTANTS["ACTION"]["TRANSLATE"]["MIN_SCORE"]
+            n_max_q_index = -1
+            #search the highest rated action in the three citytile output spacial matricies
+            for n_index in [ Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_RESEARCH.value, Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_WORKER.value, Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_CART.value  ]:
+                #detect the best score, if any
+                n_score = self.mats[ n_index, n_x_shift, n_y_shift ]
+                if n_score > n_max_q_score:
+                    n_max_q_score = n_score
+                    n_max_q_index = n_index
+            #search failed
+            if n_max_q_index < 0:
+                #do nothing
+                pass
+            else:
+                #emit CITYTILE_RESEARCH
+                if n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_RESEARCH.value:
+                    s_action = f'{GAME_CONSTANTS["ACTION"]["CITYTILE"]["RESEARCH"]} {n_x} {n_y}'
+                elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_WORKER.value:
+                    s_action = f'{GAME_CONSTANTS["ACTION"]["CITYTILE"]["BUILD_WORKER"]} {n_x} {n_y}'
+                elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_CART.value:
+                    s_action = f'{GAME_CONSTANTS["ACTION"]["CITYTILE"]["BUILD_CART"]} {n_x} {n_y}'
+                else:
+                    logging.error(f"Invalid Citytile action: {n_max_q_index}")
+                    return list()
+                #add action string to list of actionstrings for this turn
+                ls_actions_citytile.append(s_action)
+
+        return ls_actions_citytile
+
+    def _translate_unit_actions( self ) -> list:
+        """Translates citytile actions into a list of string actions to be fed to the game engine
+        Requires output spacial matricies. Requires dictionary of unit->position, reverse translation
+            list: list of citytile string actions to be fed to the game engine
+                e.g. ["m u_1 n", "bcity u_4"]
+        """
+
+        return list()
 
     #----------------    Public Members    ----------------
 
@@ -314,3 +370,33 @@ class Action():
             return True
 
         return False
+
+    def translate( self ) -> list:
+        """Translates actions into a list of string actions to be fed to the game engine
+        Requires output spacial matricies and dictionary of units to perform the translation
+        Returns:
+            list: list actions to be fed to the game engine
+                e.g. ["r 14 8", "m u_1 w"]
+        """
+
+        #allocate list of string actions to empty
+        ls_actions = list()
+
+        #translate citytile actions
+        ls_actions_citytiles = self._translate_citytile_actions()
+        if ls_actions_citytiles is None:
+            logging.error(f"failed to parse citytile actions")
+            return list()
+        #concatenate
+        ls_actions += ls_actions_citytiles
+
+        # translate unit actions
+        ls_actions_units = self._translate_unit_actions()
+        if ls_actions_units is None:
+            logging.error(f"failed to parse unit actions")
+            return list()
+        #concatenate
+        ls_actions += ls_actions_units
+
+        #logging.debug(f"{ls_actions_citytiles}")
+        return ls_actions

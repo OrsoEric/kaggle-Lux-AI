@@ -24,12 +24,13 @@ REPLAY_FOLDER = "replays"
 REPLAY_FILE = "27879876.json"
 
 GIF_FRAMERATE = 10
-#GIF_TURN_LIMIT = -1
-GIF_TURN_LIMIT = 15
+GIF_TURN_LIMIT = -1
+#GIF_TURN_LIMIT = 15
 
 TEST_JSON_TO_PERCEPTION_GIF = False
 TEST_JSON_ACTION = False
-TEST_JSON_TO_PERCEPTION_ACTION_TO_GIF = True
+TEST_JSON_TO_PERCEPTION_ACTION_TO_GIF = False
+TEST_JSON_ACTION_TRANSLATION = True
 
 TEST_MOCKUP_TRAINING = False
 
@@ -79,6 +80,19 @@ if __name__ == "__main__":
         #from a list of Perception and actions for both players generates a .gif()
         c_json_replay.perceptions_actions_to_gif( "replay_actions.gif", GIF_FRAMERATE, in_max_frames=GIF_TURN_LIMIT )
 
+    if TEST_JSON_ACTION_TRANSLATION == True:
+        #Construct Replay
+        c_json_replay = Replay()
+        #load the json file containing the replay
+        c_json_replay.json_load( REPLAY_FOLDER, REPLAY_FILE )
+        #From a replay.json extract a list of Perception and one list of Action per player. lists have one entry per step (turn) in the game
+        lc_perceptions, lc_action_p0, lc_action_p1 =  c_json_replay.json_to_perception_action()        
+        #for each step (turn) translate Action into a list of action strings that can be sent to the game engine
+        for c_action in lc_action_p0:
+            ls_actions = c_action.translate()
+            logging.debug(f"Step {0} | List of action strings: {ls_actions}")
+
+
     if TEST_MOCKUP_TRAINING == True:
         #Construct Replay
         c_json_replay = Replay()
@@ -88,5 +102,5 @@ if __name__ == "__main__":
         lc_perceptions, lc_action_p0, lc_action_p1 =  c_json_replay.json_to_perception_action()        
 
         mockup_train_net( lc_perceptions, lc_action_p0 )
-
+        
     pass
