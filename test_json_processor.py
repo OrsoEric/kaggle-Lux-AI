@@ -18,6 +18,7 @@ import logging
 import json
 import copy
 import numpy as np
+from big_no_brainer.action import Action
 
 #import game constant and make them available to the program
 from lux.constants import Constants
@@ -41,7 +42,8 @@ GIF_FRAMERATE = 10
 #GIF_TURN_LIMIT = -1
 GIF_TURN_LIMIT = 5
 
-TEST_JSON_TO_PERCEPTION_GIF = True
+TEST_JSON_TO_PERCEPTION_GIF = False
+TEST_JSON_ACTION = True
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   FILE
@@ -143,7 +145,6 @@ def json_to_action( ic_json, id_units : dict ):
             #append this step observations in the list of observations
             #lls_player_action.append( c_observation )
 
-    #actions_p0 = 
 
 
     return
@@ -184,23 +185,26 @@ def json_to_perceptions( ic_json ):
     """
     #from json loads a list of observations
     lc_observations = json_observation( c_json_replay )
-
     #from list of observations generate list of Game()
     lc_gamestates = observations_to_gamestates( lc_observations )
-    
-    
+    #Allocate
     lc_perceptions = list()
+    ld_units = list()
     #from a list of Game() generates a list of Perception()
     for c_gamestate in lc_gamestates:
         c_perception = Perception()
         c_perception.from_game( c_gamestate )
         logging.debug(f"Game: {c_gamestate}")
         logging.debug(f"Step: {c_perception.status[Perception.E_INPUT_STATUS_VECTOR.MAP_TURN.value]}  | Perceptions : {c_perception}")
+        #add the percepton to the list of perceptions
         lc_perceptions.append( c_perception )
-    logging.debug(f"Perceptions : {len(lc_perceptions)}")
-    
-    return lc_perceptions
+        #add the dictionary of units to a list of dictionaries. (redundant)
+        ld_units.append( c_perception.d_unit )
 
+    logging.debug(f"Perceptions : {len(lc_perceptions)}")
+    logging.debug(f"Dictionary of units : {len(ld_units)}")
+    
+    return lc_perceptions, ld_units
 
 def json_to_perception_action( ic_json ):
     """ Parse a replay.json into a list of observations and two list of actions
@@ -282,12 +286,18 @@ if __name__ == "__main__":
 
     if TEST_JSON_TO_PERCEPTION_GIF == True:
         #from a json extract a list of perceptions, one per turn
-        lc_perceptions = json_to_perceptions( c_json_replay )
-
-        #logging.debug(lc_perceptions[0].mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value])
+        lc_perceptions, ld_units = json_to_perceptions( c_json_replay )
         #from a list of Perception generates a .gif()
-        #gify_list_perception( lc_perceptions, "replay.gif", GIF_FRAMERATE,in_max_frames=GIF_TURN_LIMIT )
+        gify_list_perception( lc_perceptions, "replay.gif", GIF_FRAMERATE,in_max_frames=GIF_TURN_LIMIT )
 
+    if TEST_JSON_ACTION == True:
+        #from a json extract a list of perceptions, one per turn
+        lc_perceptions, ld_units = json_to_perceptions( c_json_replay )
+        #from a json extract a list of actions. needs a dictionary of units that can be foind in the perceptions 
+        lc_actions_p0 = Action( c_json_replay, ld_units, 0 )
+        lc_actions_p0 = Action( c_json_replay, ld_units, 1 )
+
+        pass
 
 
     #json_to_action( c_json_replay )    

@@ -367,9 +367,10 @@ class Perception():
     def _generate_dictionary_unit( self ) -> bool:
         """Generates a dictionary of units in the form:
         {
-            u_1 : ( 11, 17),
-            u_5 : ( 12, 17),
+            u_1 : ( 11, 17 ),
+            u_5 : ( 12, 17 ),
         }
+        Action needs to translate ID of unit into its position.
         Returns:
             bool: False=OK | True=FAIL
         """
@@ -385,7 +386,7 @@ class Perception():
             d_unit[c_unit.id] = ( c_unit.pos.x, c_unit.pos.y )
         
         self.d_unit = d_unit
-        logging.debug(f"Unit Dictionary: {d_unit}")
+        #logging.debug(f"Unit Dictionary: {d_unit}")
         return False
 
     #----------------    Public    ---------------

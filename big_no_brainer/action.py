@@ -39,6 +39,8 @@ from lux.game import Game
 from lux.game_map import Position
 from lux.game_objects import Unit
 
+from big_no_brainer.perception import Perception
+
 #plot
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -79,13 +81,18 @@ class Action():
 
     #----------------    Constructor    ----------------
 
-    def __init__( self ):
+    def __init__( self, ic_json, ic_perception : Perception, in_player : int ):
         """Constructor. Initialize mats and vars
         """
 
         #initialize class vars
         if self.__init_vars():
             logging.critical( f"Failed to initialize class vars" )
+
+        #from a json generate a list of list of actions, one list of actions for a given player
+        lls_actions  = self._compute_list_action( ic_json, in_player )
+
+        self._fill_action_mat( ic_perception, lls_actions )
 
         return
 
@@ -101,6 +108,42 @@ class Action():
         return False
 
     #----------------    Protected Members    ----------------
+
+    def _generate_list_action( self, ic_json ) -> bool:
+
+        #allocate player actions
+        lls_player_action = list()
+        logging.debug(f"JSON Steps: {len(ic_json['steps'])}")
+        #Scan every Step of the match (Turn)
+        n_last_step = len(ic_json["steps"])
+        #for n_step in range(1, n_last_step):
+        #scan each step (turn)
+        for c_step in ic_json['steps']:
+            #logging.debug(f"Step: {n_step} of {len(ic_json['steps'])}")
+            #logging.debug(f"Step: {c_step}")
+            #fetch step (turn) only present in player 0 observations
+            n_step = c_step[0]["observation"]["step"]
+            #for all players
+            for c_player in c_step:
+                #logging.debug(f"Player: {c_player}")
+                #fetch index of player
+                n_id = c_player["observation"]["player"]
+                #if player is active or the game is about to be done
+                if c_player["status"] == "ACTIVE" or c_player["status"] == "DONE":
+                    #fetch the list of actions the player took in the previous turn
+                    #From JSON, From Steps (list of turns), from a given step (turn index), from player 0, is player is active (not dead)
+                    ls_actions = c_player['action']
+                    #logging.debug(f"Step: {n_step} | Action: {ls_actions}")
+                    #scan all actions
+                    for s_action in ls_actions:
+                        #decompose the action into tokens
+                        ls_action_token = s_action.split(' ')
+                        logging.debug(f"Step: {n_step} | Player {n_id} | Action Tokens: {ls_action_token}")
+
+
+
+
+        return False
 
     #----------------    Public Members    ----------------
 
