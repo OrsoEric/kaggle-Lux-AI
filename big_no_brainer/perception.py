@@ -258,7 +258,11 @@ class Perception():
         return False
 
     def _generate_raw_resource_road_matrix( self ) -> bool:
-
+        """Generate input spacial matrix, all map sizes are centered
+        All roads are friendly and reduce CD. Roads below a city are 6 and disappear when the city does.
+        Returns:
+            bool: False=OK | True=FAIL
+        """
         #scan every 2D coordinate on the map
         for w, h in product( range( self._c_map.width ), range( self._c_map.height ) ):
             #Fetch the cell
@@ -290,7 +294,11 @@ class Perception():
         return False
 
     def _generate_cooldown( self ) -> bool:
-
+        """Generate input spacial matrix, all map sizes are centered
+        own have positive CD, enemy have negative CD
+        Returns:
+            bool: False=OK | True=FAIL
+        """
         def push_cooldown( c_pos : Position, in_cooldown : int, ix_is_enemy : bool ) -> bool:
 
             if in_cooldown < 0 or in_cooldown > GAME_CONSTANTS["PARAMETERS"]["CITY_ACTION_COOLDOWN"]:
