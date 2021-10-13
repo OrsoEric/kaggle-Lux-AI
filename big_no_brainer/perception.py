@@ -85,17 +85,17 @@ class Perception():
         #combined Citytile Fuel matrix
         CITYTILE_FUEL = 0
         #Combined Worker Resource matrix
-        WORKER_RESOURCE = 1
+        WORKER_RESOURCE = auto()
         #Combined Cart Resource matrix
-        CART_RESOURCE = 2
+        CART_RESOURCE = auto()
         #Individual Resource Cell matricies
-        RAW_WOOD = 3
-        RAW_COAL = 4
-        RAW_URANIUM = 5
+        RAW_WOOD = auto()
+        RAW_COAL = auto()
+        RAW_URANIUM = auto()
         #Roads Matrix
-        ROAD = 6
+        ROAD = auto()
         #Combined cooldown matrix for units/cities own/enemy
-        COOLDOWN = 7
+        COOLDOWN = auto()
 
     #----------------    Constructor    ----------------
 

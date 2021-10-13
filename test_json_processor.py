@@ -14,6 +14,7 @@
 
 import logging
 #Replay class takes care of loading and conversions from a replay.json created by lux-ai to Perception and Action classes
+from big_no_brainer.perception import Perception
 from big_no_brainer.replay import Replay
 
 #--------------------------------------------------------------------------------------------------------------------------------
@@ -88,9 +89,9 @@ if __name__ == "__main__":
         #From a replay.json extract a list of Perception and one list of Action per player. lists have one entry per step (turn) in the game
         lc_perceptions, lc_action_p0, lc_action_p1 =  c_json_replay.json_to_perception_action()        
         #for each step (turn) translate Action into a list of action strings that can be sent to the game engine
-        for c_action in lc_action_p0:
+        for c_perception, c_action in zip( lc_perceptions, lc_action_p0 ):
             ls_actions = c_action.translate()
-            logging.debug(f"Step {0} | List of action strings: {ls_actions}")
+            logging.debug(f"Step {c_perception.status[ Perception.E_INPUT_STATUS_VECTOR.MAP_TURN.value ]} | List of action strings: {ls_actions}")
 
 
     if TEST_MOCKUP_TRAINING == True:

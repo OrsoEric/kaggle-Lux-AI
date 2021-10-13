@@ -120,10 +120,14 @@ class Action():
         Returns:
             bool: False=OK | True=FAIL
         """
-
+        #Map size. Needed for shift
+        self._set_map_size( in_map_size )
+        #dictionary of units. needed for direct and reverse unit<->position tranlsation
+        self.d_units = None
+        #initialize output spacial mats
         self.mats = np.zeros( (len(Action.E_OUTPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
 
-        self._set_map_size( in_map_size )
+        
 
         return False
 
@@ -317,7 +321,11 @@ class Action():
         #allocate list of stringactions for this step(turn) for citytiles
         ls_actions_citytile = list()
         #allocate list of citytile action index matricies
-        ln_citytile_action_index = [ Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_RESEARCH.value, Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_WORKER.value, Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_CART.value ]
+        ln_citytile_action_index = [
+            Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_RESEARCH.value,
+            Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_WORKER.value,
+            Action.E_OUTPUT_SPACIAL_MATRICIES.CITYTILE_BUILD_CART.value 
+            ]
 
         #scan each cell of the map
         for n_x, n_y in product( range(self.n_map_size), range(self.n_map_size) ):
@@ -359,17 +367,104 @@ class Action():
                     self.mats[ n_index_reverse, n_x_shift, n_y_shift ] = 0
                 else:
                     self.mats[ n_index_reverse, n_x_shift, n_y_shift ] = 1
-                    
+
         return ls_actions_citytile
 
-    def _translate_unit_actions( self ) -> list:
+    def _reverse_dictionary_search( self, in_x : int, in_y : int ) -> str:
+        """performs a reverse dictionary search. put in the value, returns the key if any
+        e.g. { u_1 : (1, 5) | u_40 : (11, 11) } _reverse_dictionary_search( 11, 11) -> u_40
+        @TODO: need to handle units stacked in cities
+        Args:
+            in_x (int): coordinate of the unit
+            in_y (int): coordinate of the unit
+        Returns:
+            str: unique id of the unit e.g. u_1 u_43
+        """
+        
+        #scan units in dictionary
+        for s_unit, tn_position in self.d_units.items():
+            #if find a unit with right coordinates, return it
+            if tn_position[0] == in_x and tn_position[1] == in_y:
+                return s_unit
+ 
+        return None
+
+    def _translate_unit_actions( self  ) -> list:
         """Translates citytile actions into a list of string actions to be fed to the game engine
         Requires output spacial matricies. Requires dictionary of unit->position, reverse translation
             list: list of citytile string actions to be fed to the game engine
                 e.g. ["m u_1 n", "bcity u_4"]
         """
+        #allocate list of stringactions for this step(turn) for citytiles
+        ls_actions_unit = list()
+        #allocate list of citytile action index matricies
+        ln_unit_action_index = [
+            Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_NORTH.value,
+            Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_EAST.value,
+            Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_SOUTH.value,
+            Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_WEST.value, 
+            Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_BUILD_CITY.value,
+            ]
 
-        return list()
+        #scan each cell of the map
+        for n_x, n_y in product( range(self.n_map_size), range(self.n_map_size) ):
+            #apply shift
+            n_x_shift = n_x +self._w_shift
+            n_y_shift = n_y +self._h_shift
+
+            n_max_q_score = GAME_CONSTANTS["ACTION"]["TRANSLATE"]["MIN_SCORE"]
+            n_max_q_index = -1
+            #search the highest rated action in the three citytile output spacial matricies
+            for n_index in ln_unit_action_index:
+                #detect the best score, if any
+                n_score = self.mats[ n_index, n_x_shift, n_y_shift ]
+                if n_score > n_max_q_score:
+                    n_max_q_score = n_score
+                    n_max_q_index = n_index
+            #search failed
+            if n_max_q_index < 0:
+                #do nothing
+                pass
+
+            else:
+                #unit dictionary reverse search
+                s_unit = self._reverse_dictionary_search( n_x, n_y )
+                if s_unit is None:
+                    #search failed, mean a translation error. signal reverse translate error inside output spaical matricies
+                    x_error = True
+                else:
+                    x_error = False
+
+                #emit CITYTILE_RESEARCH
+                if n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_NORTH.value:
+                    s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["NORTH"]}'
+                elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_EAST.value:
+                    s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["EAST"]}'
+                elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_SOUTH.value:
+                    s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["SOUTH"]}'
+                elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_WEST.value:
+                    s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["WEST"]}'
+                elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_BUILD_CITY.value:
+                    s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["BUILD_CITY"]} {s_unit}'
+                else:
+                    logging.error(f"Invalid Citytile action: {n_max_q_index}")
+                    return list()
+                #add action string to list of actionstrings for this turn
+                ls_actions_unit.append(s_action)
+
+            #Reverse Translation. Signal which action has been translated
+            for n_index_reverse in ln_unit_action_index:
+                #if action wasn't taken
+                if n_index_reverse != n_max_q_index:
+                    self.mats[ n_index_reverse, n_x_shift, n_y_shift ] = 0
+                #taken action was a success
+                elif x_error == False:
+                    self.mats[ n_index_reverse, n_x_shift, n_y_shift ] = 1
+                #taken action failed
+                else:
+                    self.mats[ n_index_reverse, n_x_shift, n_y_shift ] = -1
+
+        return ls_actions_unit
 
     #----------------    Public Members    ----------------
 
@@ -379,10 +474,12 @@ class Action():
         if self._parse_agent_actions( id_units, ils_actions ) == True:
             logging.error(f"failed to parse string actions: {ils_actions}")
             return True
+        #attach the dictionary to the Action
+        self.d_units = id_units
 
         return False
 
-    def translate( self ) -> list:
+    def translate( self  ) -> list:
         """Translates actions into a list of string actions to be fed to the game engine
         Requires output spacial matricies and dictionary of units to perform the translation
         Returns:
