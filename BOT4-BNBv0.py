@@ -89,9 +89,7 @@ if __name__ == "__main__":
 		#When observations have been fully collected
 		if inputs == INPUT_CONSTANTS.DONE:
 			#ask the agent for a list of actions based on observations
-			actions, c_perception = agent( observation, None )
-			#append perception to list of perceptions
-			lc_gif_perception.append(c_perception)
+			actions = agent( observation, None )
 			observation["updates"] = []
 			step += 1
 			observation["step"] = step

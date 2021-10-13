@@ -91,7 +91,7 @@ def agent( observation , configurations ):
 	c_perception = Perception()
 	c_perception.from_game( game_state )
 
-
+	agent_actions = [""]
 
 	logging.debug(f"Actions: {agent_actions}")
 
