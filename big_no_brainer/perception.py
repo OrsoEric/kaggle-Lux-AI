@@ -36,12 +36,6 @@ from lux.game import Game
 from lux.game_map import Position
 from lux.game_objects import Unit
 
-#plot
-import matplotlib.pyplot as plt
-import seaborn as sns
-#convert input matricies into .gif
-import matplotlib.animation as animation
-
 #--------------------------------------------------------------------------------------------------------------------------------
 #   Perception
 #--------------------------------------------------------------------------------------------------------------------------------
@@ -56,7 +50,7 @@ class Perception():
     (V) Coal matrix: as wood
     (V) Uranium matrix: as wood
     (V) Road matrix: road value per tile
-    ( ) Cooldown matrix: Bot's cooldown with negative sign, opponent's cooldown positive
+    (V) Cooldown matrix: Bot's cooldown with negative sign, opponent's cooldown positive
     """
     #----------------    Configurations    ----------------
 
@@ -75,16 +69,15 @@ class Perception():
     
     #enumerate state vector that describe game wide information, will bypass the spatial processing stage
     class E_INPUT_STATUS_VECTOR( Enum ):
-        MAP_TURN = 0
-        MAP_IS_NIGHT = auto(),
-        OWN_RESEARCH = auto(),
-        OWN_RESEARCHED_COAL = auto(),
-        OWN_RESEARCHED_URANIUM = auto(),
-        ENEMY_RESEARCH = auto(),
-        ENEMY_RESEARCHED_COAL = auto(),
-        ENEMY_RESEARCHED_URANIUM = auto(),
-        #number of global state variables
-        NUM = auto(),
+        MAP_SIZE = 0
+        MAP_TURN = auto()
+        MAP_IS_NIGHT = auto()
+        OWN_RESEARCH = auto()
+        OWN_RESEARCHED_COAL = auto()
+        OWN_RESEARCHED_URANIUM = auto()
+        ENEMY_RESEARCH = auto()
+        ENEMY_RESEARCHED_COAL = auto()
+        ENEMY_RESEARCHED_URANIUM = auto()
 
 	#NOTE: the enum were tuple because i put a coma like a c++ enum.
     #enumerate possible types of cell {5+6+12+8=31} * {Width} * {Height}
@@ -92,47 +85,45 @@ class Perception():
         #combined Citytile Fuel matrix
         CITYTILE_FUEL = 0
         #Combined Worker Resource matrix
-        WORKER_RESOURCE = 1
+        WORKER_RESOURCE = auto()
         #Combined Cart Resource matrix
-        CART_RESOURCE = 2
+        CART_RESOURCE = auto()
         #Individual Resource Cell matricies
-        RAW_WOOD = 3
-        RAW_COAL = 4
-        RAW_URANIUM = 5
+        RAW_WOOD = auto()
+        RAW_COAL = auto()
+        RAW_URANIUM = auto()
         #Roads Matrix
-        ROAD = 6
+        ROAD = auto()
         #Combined cooldown matrix for units/cities own/enemy
-        COOLDOWN = 7
+        COOLDOWN = auto()
 
     #----------------    Constructor    ----------------
 
-    def __init__( self, ic_game_state : Game ):
+    def __init__( self ):
         """Construct perception class based on a game state
-        Args:
-            ic_game_state (Game): Current game state
         """
 
-        #store locally the game state. Not visible from outside
-        self._c_map = ic_game_state.map
-        self._c_own = ic_game_state.players[ ic_game_state.id ]
-        self._c_enemy = ic_game_state.players[ ic_game_state.opponent_id ]
-        #tiles are shifted so that all map sizes are centered
-        self._w_shift = (GAME_CONSTANTS['MAP']['WIDTH_MAX'] - ic_game_state.map_width) // 2
-        self._h_shift = (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] - ic_game_state.map_height) // 2
-        #initialize perception matricies
-        self.mats = np.zeros( (len(Perception.E_INPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
-        logging.debug(f"Allocating input spacial matricies: {len(Perception.E_INPUT_SPACIAL_MATRICIES)} | shape: {self.mats.shape}")
-        #fill the perception matrix
-        self.invalid = self._generate_perception()
-        self.invalid |= self._generate_unit_resource_matrix()
-        self.invalid |= self._generate_raw_resource_road_matrix()
-        self.invalid |= self._generate_cooldown()
-
-        #allocate the status vector
-        self.status = np.zeros( len(Perception.E_INPUT_STATUS_VECTOR) )
-        self.status[ Perception.E_INPUT_STATUS_VECTOR.MAP_TURN.value ] = ic_game_state.turn
+        #initialize class vars
+        self.__init_vars()
 
         return
+
+    #----------------    Private Members    ---------------
+
+    def __init_vars( self ) -> bool:
+        """Initialize class vars
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+
+        #initialize to invalid
+        self.invalid = True
+        #allocate the status vector
+        self.status = np.zeros( len(Perception.E_INPUT_STATUS_VECTOR) )
+        #initialize perception matricies
+        self.mats = np.zeros( (len(Perception.E_INPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
+
+        return False
 
     #----------------    Overloads    ---------------
 
@@ -316,8 +307,9 @@ class Perception():
             if self._check_bounds_pos( c_pos ) == True:
                 logging.critical(f"Position is invalid {c_pos}")
                 return True            
-            
-            self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] += in_cooldown
+            #accumulate cooldown in the cooldown matrix
+            self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value, self._w_shift +c_pos.x, self._h_shift +c_pos.y] += n_fill_value
+            #logging.debug(f"Pos {self._w_shift +c_pos.x} {self._h_shift +c_pos.y} | {ix_is_enemy} | {n_fill_value}")
 
             return False
 
@@ -325,13 +317,11 @@ class Perception():
         for c_unit in self._c_own.units:
             #fit cooldown with +sign for resource
             push_cooldown( c_unit.pos, c_unit.cooldown, False )
-            pass
             
         #Scan all Enemy Unit
         for c_unit in self._c_enemy.units:
             #fit cooldown with +sign for resource
             push_cooldown( c_unit.pos, c_unit.cooldown, True )
-            pass
 
         #scan all Own Cities in the dictionary of cities
         for s_city_name, c_city in self._c_own.cities.items():
@@ -358,23 +348,82 @@ class Perception():
         #logging.debug(f"CD: {self.mats[Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value].sum()}") 
         return False
 
-    def _generate_perception( self ) -> bool:
-        """Runs the generation of all perception matricies
+    def _generate_status_vector( self ):
+        """Generate the status vector to be fed in input of the ML
         Returns:
             bool: False=OK | True=FAIL
         """
-        
-        if self._generate_citytile_fuel_matrix():
-            return True
 
+        #
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.MAP_SIZE.value ] = self._c_map.width
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.MAP_TURN.value ] = self.n_turn
+
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.OWN_RESEARCH.value ] = self._c_own.research_points
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.OWN_RESEARCHED_COAL.value ] = self._c_own.researched_coal()
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.OWN_RESEARCHED_URANIUM.value ] = self._c_own.researched_uranium()
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.ENEMY_RESEARCH.value ] = self._c_enemy.research_points
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.ENEMY_RESEARCHED_COAL.value ] = self._c_enemy.researched_coal()
+        self.status[ Perception.E_INPUT_STATUS_VECTOR.ENEMY_RESEARCHED_URANIUM.value ] = self._c_enemy.researched_uranium()
+
+        return False
+    
+    def _generate_dictionary_unit( self ) -> bool:
+        """Generates a dictionary of units in the form:
+        {
+            u_1 : ( 11, 17 ),
+            u_5 : ( 12, 17 ),
+        }
+        Action needs to translate ID of unit into its position.
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+
+        d_unit = dict()
+
+        #Scan all Own Unit
+        for c_unit in self._c_own.units:
+            d_unit[c_unit.id] = ( c_unit.pos.x, c_unit.pos.y )
+            
+        #Scan all Enemy Unit
+        for c_unit in self._c_enemy.units:
+            d_unit[c_unit.id] = ( c_unit.pos.x, c_unit.pos.y )
+        
+        self.d_unit = d_unit
+        #logging.debug(f"Unit Dictionary: {d_unit}")
         return False
 
     #----------------    Public    ---------------
 
-    def compute_perception( self ):
+    def from_game( self, ic_game_state : Game ) -> bool:
+        """fill the Perception class from a Game() class
+        Args:
+            ic_game_state (Game): Current game state
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+        
+        #turn index
+        self.n_turn = ic_game_state.turn
 
+        #store locally the game state. Not visible from outside
+        self._c_map = ic_game_state.map
+        self._c_own = ic_game_state.players[ ic_game_state.id ]
+        self._c_enemy = ic_game_state.players[ ic_game_state.opponent_id ]
+        #tiles are shifted so that all map sizes are centered
+        self._w_shift = (GAME_CONSTANTS['MAP']['WIDTH_MAX'] -ic_game_state.map_width) // 2
+        self._h_shift = (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] -ic_game_state.map_height) // 2
 
-        return
+        #reset to valid
+        self.invalid = False
+        #fill the ML input status vector
+        self.invalid |= self._generate_status_vector()
+        #fill the ML input spacial matricies
+        self.invalid |= self._generate_unit_resource_matrix()
+        self.invalid |= self._generate_raw_resource_road_matrix()
+        self.invalid |= self._generate_cooldown()
+        self.invalid |= self._generate_dictionary_unit()
+
+        return False
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   Save/Load Pickle
@@ -419,85 +468,3 @@ def load_perceptions( is_file_name : str ):
         return None
 
     return lc_perceptions
-
-#--------------------------------------------------------------------------------------------------------------------------------
-#   Save Heatmaps as Gifs
-#--------------------------------------------------------------------------------------------------------------------------------
-
-def gify_list_perception( ilc_list_perception : list, is_filename : str, in_framerate : int, in_max_frames = -1 ):
-    """Turn a list of perceptions into a Gif
-    because of compression, there are going to be fewer frames, but the delay in them ensures the movie represent the correct output
-    Args:
-        ilc_list_perception (list): list of Perception classes
-        is_filename (str): name of the output gif. must be a .gif
-        in_framerate (int): Framerate in FPS
-        in_max_frames(int): -1=gify ALL the frames | >0 gify only up to a given number of frames
-    """
-    logging.debug(f"saving heatmaps...")
-    dimension = (32, 32)
-    fig, axes = plt.subplots( nrows=3, ncols=3, figsize=(12, 12) )
-    ((ax1, ax2, ax3), (ax4, ax5, ax6), (ax31, ax32, ax33)) = axes
-    
-    def draw_heatmap( ic_perception: Perception ):
-        #TODO only first time draw the colorbar
-
-        #plt.clf()
-        
-        #CityTile/Fuel Mat
-        data_citytile_fuel = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CITYTILE_FUEL.value ]
-        ax1.title.set_text(f"Citytile/Fuel {data_citytile_fuel.sum()}")
-        sns.heatmap( data_citytile_fuel, center=0, vmin=-100, vmax=100, ax=ax1, cbar=False )
-
-        data_worker_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.WORKER_RESOURCE.value ]
-        ax2.title.set_text(f"Worker/Resource {data_worker_resource.sum()}")
-        sns.heatmap( data_worker_resource, center=0, vmin=-100, vmax=100, ax=ax2, cbar=False )
-        
-        data_cart_resource = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.CART_RESOURCE.value ]
-        ax3.title.set_text(f"Cart/Resource {data_cart_resource.sum()}")
-        sns.heatmap( data_cart_resource, center=0, vmin=-100, vmax=100, ax=ax3, cbar=False )
-        
-        data_raw_wood = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_WOOD.value ]
-        data_raw_coal = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_COAL.value ]
-        data_raw_uranium = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.RAW_URANIUM.value ]
-        ax4.title.set_text(f"Raw Wood {data_raw_wood.sum()}")
-        ax5.title.set_text(f"Raw Coal {data_raw_coal.sum()}")
-        ax6.title.set_text(f"Raw Uranium {data_raw_uranium.sum()}")
-        sns.heatmap( data_raw_wood, center=0, vmin=-100, vmax=100, ax=ax4, cbar=False )
-        sns.heatmap( data_raw_coal, center=0, vmin=-100, vmax=100, ax=ax5, cbar=False )
-        sns.heatmap( data_raw_uranium, center=0, vmin=-100, vmax=100, ax=ax6, cbar=False )
-        
-        #logging.info(f"ROADS: {Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value} | shape: {ic_perception.mats.shape}")
-        data_road = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.ROAD.value ]
-        ax31.title.set_text(f"Roads {data_road.sum()}")
-        sns.heatmap( data_road, center=0, vmin=0, vmax=6, ax=ax31, cbar=False )
-
-        data_cooldown = ic_perception.mats[ Perception.E_INPUT_SPACIAL_MATRICIES.COOLDOWN.value ]
-        ax32.title.set_text(f"Cooldown {data_cooldown.sum()}")
-        sns.heatmap( data_cooldown, center=0, vmin=0, vmax=GAME_CONSTANTS["PARAMETERS"]["CITY_ACTION_COOLDOWN"], ax=ax32, cbar=False )
-
-        return [ data_citytile_fuel.sum(), data_worker_resource.sum() ]
-
-
-    draw_heatmap( ilc_list_perception[0] )
-
-    def init():
-        
-        draw_heatmap( ilc_list_perception[0] )
-
-    def animate(i):
-        fig.suptitle(f"TURN: {i}", fontsize=16)
-        l_sum = draw_heatmap( ilc_list_perception[i] )
-        logging.info(f"generating heatmap{i} ... {l_sum}")
-
-    if (in_max_frames < 0):
-        n_frames = len(ilc_list_perception)
-    elif in_max_frames >= len(ilc_list_perception):
-        n_frames = len(ilc_list_perception)
-    else:
-        n_frames = in_max_frames
-
-    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=n_frames, repeat=False, save_count=n_frames)
-    anim.save( is_filename, writer='pillow', fps=in_framerate )
-    logging.debug(f"saving heatmaps as: {is_filename} | total frames: {n_frames}")
-
-    return
