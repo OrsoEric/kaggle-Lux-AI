@@ -31,7 +31,7 @@ GIF_TURN_LIMIT = -1
 TEST_JSON_TO_PERCEPTION_GIF = False
 TEST_JSON_ACTION = False
 TEST_JSON_TO_PERCEPTION_ACTION_TO_GIF = False
-TEST_JSON_ACTION_TRANSLATION = True
+TEST_JSON_ACTION_TRANSLATION = False
 
 TEST_MOCKUP_TRAINING = False
 
@@ -51,6 +51,8 @@ def mockup_train_net( lc_features : list, lc_labels : list ):
 if __name__ == "__main__":
 
     logging.basicConfig( level=logging.DEBUG, format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s' )
+    
+    logging.debug(f"{[e_enum.name for e_enum in Perception.E_INPUT_SPACIAL_MATRICIES]}")
 
     if TEST_JSON_TO_PERCEPTION_GIF == True:
 

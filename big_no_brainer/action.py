@@ -479,7 +479,7 @@ class Action():
 
         return False
 
-    def translate( self  ) -> list:
+    def translate( self ) -> list:
         """Translates actions into a list of string actions to be fed to the game engine
         Requires output spacial matricies and dictionary of units to perform the translation
         Returns:

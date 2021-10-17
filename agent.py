@@ -26,11 +26,8 @@ RESOURCE_TYPES = Constants.RESOURCE_TYPES
 
 from lux.game import Game
 
-#Import the rule processor for the rule based agent
-from rule import Rule
-
 from big_no_brainer.perception import Perception
-from big_no_brainer.perception import save_perceptions
+from big_no_brainer.action import Action
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONSTANTS(fake)
@@ -52,47 +49,6 @@ lc_perceptions = list()
 
 #Game() class that holds all processed observations
 game_state = None
-
-##  save a game state to file
-#   uses pickle
-def save_game_state( ic_game_state : Game(), is_file_name : str() ) -> bool:
-    """save a game state to file
-    Args:
-        ic_game_state (Game): game state to be saved
-        is_file_name (str): destination file name 
-    Returns:
-        bool: false: success | true: fail
-    """
-    
-    try:
-        with open(is_file_name, "wb") as opened_file:
-            pickle.dump( ic_game_state, opened_file )
-
-    except OSError as problem:
-        logging.critical(f"Pickle: {problem}")
-        return True
-
-    return False
-
-##  load a game state to file
-#   uses pickle
-def load_game_state( is_file_name : str() ) -> Game:
-    """load a game state to file
-    Args:
-        is_file_name (str): source file name 
-    Returns:
-        Game: loaded game state
-    """
-    
-    try:
-        with open(is_file_name, "rb") as opened_file:
-            ic_game_state = pickle.load( opened_file )
-
-    except OSError as problem:
-        logging.critical(f"Pickle: {problem}")
-        return None
-
-    return ic_game_state
 
 ##  agent function
 #   processes inputs into a Game() class
@@ -128,33 +84,20 @@ def agent( observation , configurations ):
 	logging.debug(f"Turn {game_state.turn} | Player {game_state.id} {player}")
 
 	#--------------------------------------------------------------------------------------------------------------------------------
-	#   Agent Rule Processor
+	#   Agent 
 	#--------------------------------------------------------------------------------------------------------------------------------
 
-	#during the first turn, save the game state to file
-	if ((game_state.turn == 0) and (X_PICKLE_SAVE_GAME_STATE == True)):
-		save_game_state( game_state, "pickle_dump_game_state.bin" )
+	#construct Perception() matricies from a Game() gamestate class
+	c_perception = Perception()
+	c_perception.from_game( game_state )
 
-	#initialize rule processor with the game state
-	#agent_rule_processor = Rule( game_state.map, player, opponent )
-	agent_rule_processor = Rule( game_state )
-	#ask the rule processor to come up with a list of actions
-	agent_actions = agent_rule_processor.compute_actions()
+	#--------------------------------------------------------------------------------------------------------------------------------
+	# 	BNB Big No Brainer network
+	#--------------------------------------------------------------------------------------------------------------------------------
+
+	#generates a virgin action
+	c_action = Action()
+	agent_actions = c_action.translate()
+	
 	logging.debug(f"Actions: {agent_actions}")
-
-	#--------------------------------------------------------------------------------------------------------------------------------
-	#   Perceptions
-	#--------------------------------------------------------------------------------------------------------------------------------
-
-	c_perception = Perception( game_state )
-	lc_perceptions.append( c_perception )
-	logging.info(f"Perceptions: {len(lc_perceptions)}")
-	if (game_state.turn == 360):
-		s_filename = f"citytile_agent{game_state.id}.pkl"
-		logging.info(f"SAVE {game_state.turn} as {s_filename}")
-		#save_list_perception(lc_perceptions , s_filename )
-		save_perceptions( lc_perceptions, s_filename )
-		logging.info(f"DONE {s_filename}")
-		pass
-
 	return agent_actions
