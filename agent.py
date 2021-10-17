@@ -91,8 +91,13 @@ def agent( observation , configurations ):
 	c_perception = Perception()
 	c_perception.from_game( game_state )
 
-	agent_actions = [""]
+	#--------------------------------------------------------------------------------------------------------------------------------
+	# 	BNB Big No Brainer network
+	#--------------------------------------------------------------------------------------------------------------------------------
 
+	#generates a virgin action
+	c_action = Action()
+	agent_actions = c_action.translate()
+	
 	logging.debug(f"Actions: {agent_actions}")
-
 	return agent_actions
