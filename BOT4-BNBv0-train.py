@@ -53,7 +53,7 @@ def get_replays( is_folder : str ) -> list:
 #--------------------------------------------------------------------------------------------------------------------------------
 #   Replay.json are concatenated and fed to the training of the BNB net
 
-def mockup_train_net( lc_features : list, lc_labels : list ) -> bool:
+def mockup_train_net( lc_step_in : list, lc_step_out : list ) -> bool:
     """???
     Args:
         lc_features (list): list of Perception, one for each step (turn). Perception.mats shape: feature*size*size
@@ -61,9 +61,13 @@ def mockup_train_net( lc_features : list, lc_labels : list ) -> bool:
     Returns:
             bool: False=OK | True=FAIL
     """
-    logging.debug(f"Features: {len(lc_features)} | Shape: {lc_features[0].status.shape} | Feature Name: {[e_enum.name for e_enum in Perception.E_INPUT_STATUS_VECTOR]}")
-    logging.debug(f"Features: {len(lc_features)} | Shape: {lc_features[0].mats.shape} | Feature Name: {[e_enum.name for e_enum in Perception.E_INPUT_SPACIAL_MATRICIES]}")
-    logging.debug(f"Labels: {len(lc_labels)} | Shape: {lc_labels[0].mats.shape} | Label Name: {[e_enum.name for e_enum in Action.E_OUTPUT_SPACIAL_MATRICIES]}")
+    logging.debug(f"Features: {len(lc_step_in)} | Shape: {lc_step_in[0].status.shape} | Feature Name: {[e_enum.name for e_enum in Perception.E_INPUT_STATUS_VECTOR]}")
+    logging.debug(f"Features: {len(lc_step_in)} | Shape: {lc_step_in[0].mats.shape} | Feature Name: {[e_enum.name for e_enum in Perception.E_INPUT_SPACIAL_MATRICIES]}")
+    logging.debug(f"Labels: {len(lc_step_out)} | Shape: {lc_step_out[0].mats.shape} | Label Name: {[e_enum.name for e_enum in Action.E_OUTPUT_SPACIAL_MATRICIES]}")
+
+    logging.debug(f"IN :{lc_step_in[0].mats[0]}")
+    logging.debug(f"OUT :{lc_step_out[0].mats[0]}")
+
     return False
 
 #--------------------------------------------------------------------------------------------------------------------------------
