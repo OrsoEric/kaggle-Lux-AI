@@ -23,7 +23,7 @@ from big_no_brainer.perception import Perception
 from big_no_brainer.action import Action
 from big_no_brainer.replay import Replay
 
-from big_no_brainer.model_tf import bnb_model_tf
+from big_no_brainer.model_tf import Bnb_model
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONFIGURATION
@@ -52,65 +52,6 @@ def get_replays( is_folder : str ) -> list:
 
     return ls_replays
 
-def build_training_input_mats( lc_source ):
-    """From a list of objects with "mats" attribute, generate a numpy array
-    e.g. 720x mats(8x32x32) -> 720*8*32*32
-    e.g. 720x mats(15*32*32) -> 720*15*32*32
-    Args:
-        lc_source ([type]): [description]
-    Returns:
-        list: [description]
-    """
-    n_turns = len( lc_source )
-    t_shape = lc_source[0].mats.shape
-    logging.debug(f" Turns: {n_turns} | Shape: {t_shape}")
-
-    r_shape = [n_turns]
-    for n_tmp in t_shape:
-        r_shape.append(n_tmp)
-    logging.debug(f"Resulting Shape: {r_shape}")
-    
-    #generate a np array from a list
-    cnp_result = np.zeros( r_shape )
-    for index, entry in enumerate( lc_source ):
-        cnp_result[index] = entry.mats
-
-    logging.debug(f"Result IN: {cnp_result.shape}")
-
-    return cnp_result
-
-def build_training_output_mats( lc_source ):
-    """From a list of objects with "mats" attribute, generate a numpy array
-    e.g. 720x mats(8x32x32) -> 720*8*32*32
-    e.g. 720x mats(15*32*32) -> 720*15*32*32
-    Args:
-        lc_source ([type]): [description]
-    Returns:
-        list: [description]
-    """
-    n_turns = len( lc_source )
-    t_shape = lc_source[0].mats.shape
-    logging.debug(f" Turns: {n_turns} | Shape: {t_shape}")
-
-    r_shape = [n_turns]
-    f_shape = 1
-    for n_tmp in t_shape:
-        f_shape *= n_tmp
-    r_shape.append(f_shape)
-    logging.debug(f"Resulting Shape: {r_shape}")
-    
-    #generate a np array from a list
-    cnp_result = np.zeros( r_shape )
-    for index, entry in enumerate( lc_source ):
-        cnp_reshaped = entry.mats.reshape([-1])
-        cnp_result[index] = cnp_reshaped
-
-    logging.debug(f"Result OUT: {cnp_result.shape}")
-
-    return cnp_result
-
-
-
 #--------------------------------------------------------------------------------------------------------------------------------
 #   BNB Big No Brainer imitation net
 #--------------------------------------------------------------------------------------------------------------------------------
@@ -130,20 +71,15 @@ def mockup_train_net( lc_step_in : list, lc_step_out : list ) -> bool:
 
     logging.debug(f"IN :{lc_step_in[0].mats[0]}")
     logging.debug(f"OUT :{lc_step_out[0].mats[0]}")
-    #
-    c_model = bnb_model_tf( lc_step_in[0], lc_step_out[0] ) 
-    cnp_step_in = build_training_input_mats( lc_step_in ) 
-    cnp_step_out = build_training_output_mats( lc_step_out ) 
-    logging.debug(f"NP IN: {cnp_step_in.shape}")
-    logging.debug(f"NP OUR: {cnp_step_out.shape}")
 
-
-    #Needs a NP TURNSx8x32x32
-    #Needs a NP TURNSx15x32x32
-
-
-    c_model.fit( cnp_step_in, cnp_step_out, epochs=1000 )
-    c_model.save("shaka.tf")
+    #Construct BNB class
+    c_model = Bnb_model()
+    #Construct a ML model based on what Perception and Action look like
+    c_model.build( lc_step_in[0], lc_step_out[0] )
+    #Feed a list of Perception and Action, one entry per turn. Multiple games. Train tries to build a net that imitates the input games
+    c_model.train( lc_step_in, lc_step_out )
+    #Save the trained model on file
+    c_model.save("shaka")
 
     return False
 

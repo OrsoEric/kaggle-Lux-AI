@@ -36,7 +36,9 @@ from big_no_brainer.model_tf import bnb_model_tf
 #----------------    Big No Brainer    ---------------
 
 #depickle a game state, and test the construction of a perception
-TEST_TF_MODEL = True
+TEST_TF_MODEL = False
+
+TEST_TF_LOAD_MODEL = True
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   TEST BENCHES
@@ -48,23 +50,44 @@ TEST_TF_MODEL = True
 
 #   if interpreter has the intent of executing this file
 if __name__ == "__main__":
-	#setup logging
-	logging.basicConfig(
-		#level of debug to show
-		level=logging.DEBUG,
-		#header of the debug message
-		format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
-	)
+    #setup logging
+    logging.basicConfig(
+        #level of debug to show
+        level=logging.DEBUG,
+        #header of the debug message
+        format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
+    )
 
-	if TEST_TF_MODEL == True:
-		#construct zero input
-		c_perception = Perception()
-		c_action = Action( 32 )
+    if TEST_TF_MODEL == True:
+        #construct zero input
+        c_perception = Perception()
+        c_action = Action( 32 )
 
-		logging.debug(f"input state: {c_perception.status.shape}")
-		logging.debug(f"input mats: {c_perception.mats.shape}")
-		logging.debug(f"output mats: {c_action.mats.shape}")
+        logging.debug(f"input state: {c_perception.status.shape}")
+        logging.debug(f"input mats: {c_perception.mats.shape}")
+        logging.debug(f"output mats: {c_action.mats.shape}")
 
-		bnb_model_tf( c_perception, c_action )
+        bnb_model_tf( c_perception, c_action )
 
-		pass	
+
+
+        pass	
+
+    if TEST_TF_LOAD_MODEL == True:
+        #construct zero input
+        c_perception = Perception()
+        c_action = Action( 32 )
+
+        logging.debug(f"input state: {c_perception.status.shape}")
+        logging.debug(f"input mats: {c_perception.mats.shape}")
+        logging.debug(f"output mats: {c_action.mats.shape}")
+
+        c_model = bnb_model_tf( c_perception, c_action )
+        logging.debug(f"Restoring weights...")
+        c_model.load_weights("shaka")
+        c_model.summary()
+
+        c_model.predict()
+
+
+        pass
