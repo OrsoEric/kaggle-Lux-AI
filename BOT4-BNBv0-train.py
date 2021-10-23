@@ -142,8 +142,8 @@ def mockup_train_net( lc_step_in : list, lc_step_out : list ) -> bool:
     #Needs a NP TURNSx15x32x32
 
 
-    c_model.fit( cnp_step_in, cnp_step_out )
-
+    c_model.fit( cnp_step_in, cnp_step_out, epochs=1000 )
+    c_model.save("shaka.tf")
 
     return False
 
