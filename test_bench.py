@@ -14,82 +14,36 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 #convert input matricies into .gif
 import matplotlib.animation as animation
+from big_no_brainer.action import Action
 
 
 from lux.game_map import Position
 
 #pickle game state loader
-from agent import load_game_state
+#from agent import load_game_state
 
 #from agent import agent
-from rule import Rule
+#from rule import Rule
 
 from big_no_brainer.perception import Perception
-from big_no_brainer.perception import gify_list_perception
+#from big_no_brainer.perception import gify_list_perception
+from big_no_brainer.model_tf import bnb_model_tf
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONSTANTS(fake)
 #--------------------------------------------------------------------------------------------------------------------------------
 
-#executes the pickle load and Rule class vanilla
-TEST_TEST_BENCH = False
-TEST_RULE_SEARCH_NEAREST = False
-
 #----------------    Big No Brainer    ---------------
 
 #depickle a game state, and test the construction of a perception
 TEST_BIGNOBRAINER_PERCEPTION = False
-TEST_BIGNOBRAINER_PERCEPTION_ANIMATED = True 
+TEST_BIGNOBRAINER_PERCEPTION_ANIMATED = False 
+TEST_TF_MODEL = True
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   TEST BENCHES
 #--------------------------------------------------------------------------------------------------------------------------------
 
-##	test the test bench
-#	1) load a game state
-#	2) execute agent rule
-#	3) shows actions taken
-def test_test_bench( is_file_name ) -> bool:
-	#load game state
-	game_state = load_game_state( is_file_name )
-	if (game_state == None):
-		logging.critical(f"Failed to load")
-		return True
-	#initialize rule processor with the game state
-	#agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
-	agent_rule_processor = Rule( game_state )
-	#ask the rule processor to come up with a list of actions
-	agent_actions = agent_rule_processor.compute_actions()
-	logging.debug(f"Actions: {agent_actions}")
-
-	return False
-
-def test_rule_search_nearest( is_file_name ) -> bool:
-	#load game state
-	game_state = load_game_state( is_file_name )
-	if (game_state == None):
-		logging.critical(f"Failed to load")
-		return True
-
-	#initialize rule processor with the game state
-	#agent_rule_processor = Rule( game_state.map, game_state.players[game_state.id], game_state.players[game_state.opponent_id] )
-	agent_rule_processor = Rule( game_state )
-
-	print("Test search cell type method")
-	"""
-	print(agent_rule_processor.__search_nearest( game_state.map, Rule.E_CELL_TYPE.ANY, Position(0,0) ))
-	print(agent_rule_processor.__search_nearest( game_state.map, Rule.E_CELL_TYPE.ANY, Position(6,8) ))
-	print(agent_rule_processor.__search_nearest( game_state.map, Rule.E_CELL_TYPE.CITYTILE, Position(6,8) ))
-	print(agent_rule_processor.__search_nearest( game_state.map, Rule.E_CELL_TYPE.CITYTILE_PLAYER, Position(6,8) ))
-	print(agent_rule_processor.__search_nearest( game_state.map, Rule.E_CELL_TYPE.CITYTILE_OPPONENT, Position(6,8) ))
-	print(agent_rule_processor.__search_nearest( game_state.map, Rule.E_CELL_TYPE.RESOURCE, Position(6,8) ))
-	print(agent_rule_processor.__search_nearest( game_state.map, Rule.E_CELL_TYPE.COAL, Position(3,2) ))
-	print(agent_rule_processor.__search_nearest( game_state.map, Rule.E_CELL_TYPE.URANIUM, Position(3,2) ))
-	print(agent_rule_processor.__search_nearest( game_state.map, Rule.E_CELL_TYPE.WOOD, Position(3,2) ))
-	#print(agent_rule_processor.search_nearest( game_state.map, Rule.E_CELL_TYPE.EMPTY, Position(3,2) ))
-	"""
-
-	return False
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   BIG NO BRAINER
@@ -167,16 +121,10 @@ if __name__ == "__main__":
 	#setup logging
 	logging.basicConfig(
 		#level of debug to show
-		level=logging.INFO,
+		level=logging.DEBUG,
 		#header of the debug message
 		format='[%(asctime)s] %(module)s:%(lineno)d %(levelname)s> %(message)s',
 	)
-
-	if TEST_TEST_BENCH==True:
-		test_test_bench( "pickle_dump_game_state.bin" )
-
-	if TEST_RULE_SEARCH_NEAREST == True:
-		test_rule_search_nearest( "pickle_dump_game_state.bin" )
 
 	if TEST_BIGNOBRAINER_PERCEPTION==True:
 		#test_big_no_brainer_perception( "pickle_dump_game_state.bin" )
@@ -185,3 +133,16 @@ if __name__ == "__main__":
 	if TEST_BIGNOBRAINER_PERCEPTION_ANIMATED==True:
 		#animate_heatmap("test.gif")
 		test_big_no_brainer_perception_animation( [f"saved_game_states\\backup_{50*index}.bin" for index in range(8) ]  )
+
+	if TEST_TF_MODEL == True:
+		#construct zero input
+		c_perception = Perception()
+		c_action = Action( 32 )
+
+		logging.debug(f"input state: {c_perception.status.shape}")
+		logging.debug(f"input mats: {c_perception.mats.shape}")
+		logging.debug(f"output mats: {c_action.mats.shape}")
+
+		bnb_model_tf( c_perception, c_action )
+
+		pass	
