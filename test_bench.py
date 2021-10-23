@@ -27,7 +27,7 @@ from lux.game_map import Position
 
 from big_no_brainer.perception import Perception
 #from big_no_brainer.perception import gify_list_perception
-from big_no_brainer.model_tf import bnb_model_tf
+from big_no_brainer.model_tf import Bnb_model
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   CONSTANTS(fake)
@@ -67,7 +67,10 @@ if __name__ == "__main__":
         logging.debug(f"input mats: {c_perception.mats.shape}")
         logging.debug(f"output mats: {c_action.mats.shape}")
 
-        bnb_model_tf( c_perception, c_action )
+        #Construct BNB class
+        c_model = Bnb_model()
+        #Construct a ML model based on what Perception and Action look like
+        c_model.build( c_perception, c_action )
 
 
 
@@ -82,12 +85,16 @@ if __name__ == "__main__":
         logging.debug(f"input mats: {c_perception.mats.shape}")
         logging.debug(f"output mats: {c_action.mats.shape}")
 
-        c_model = bnb_model_tf( c_perception, c_action )
+        #Construct BNB class
+        c_model = Bnb_model()
+        #Construct a ML model based on what Perception and Action look like
+        c_model.build( c_perception, c_action )
+        #Loads the weights of a previously trained BNB class
         logging.debug(f"Restoring weights...")
-        c_model.load_weights("shaka")
-        c_model.summary()
+        c_model.load("shaka")
+        c_model.c_model.summary()
 
-        c_model.predict()
+        #c_model.predict()
 
 
         pass

@@ -112,9 +112,9 @@ class Bnb_model:
 
         return False
 
-    def bnb_model_inference( c_in: Perception, c_out: Action ):
-        return
+    def bnb_model_inference( c_in: Perception, c_out: Action ) -> bool:
 
+        return False
 
     #----------------    Protected Methods    ----------------
 
