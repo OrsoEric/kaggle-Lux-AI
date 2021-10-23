@@ -28,7 +28,7 @@ def bnb_model_tf(c_in : Perception, c_out : Action):
 
     c_model = Model(d_input, result)
 
-    c_model.compile(loss=losses.BinaryCrossentropy(from_logits=True),
+    c_model.compile(loss=losses.MeanSquaredError(),
                 optimizer=optimizers.Adam())
 
     return c_model
