@@ -19,7 +19,7 @@ import Pipeline
 #   MODEL
 # --------------------------------------------------------------------------------------------------------------------------------
 
-def bnb_model_tf(c_in: Perception, c_out: Action):
+def bnb_model_tf():
     # allocate dictionary of inputs
     #d_input = {}
     #d_input["mats"] = Input(shape=(8, 32, 32), name="mats", dtype=float32)
