@@ -381,6 +381,10 @@ class Action():
             str: unique id of the unit e.g. u_1 u_43
         """
         
+        #if dictionary of unit is empty, skip search
+        if self.d_units is None or len(self.d_units) <= 0:
+            return None
+
         #scan units in dictionary
         for s_unit, tn_position in self.d_units.items():
             #if find a unit with right coordinates, return it
@@ -435,22 +439,22 @@ class Action():
                 else:
                     x_error = False
 
-                #emit CITYTILE_RESEARCH
-                if n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_NORTH.value:
-                    s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["NORTH"]}'
-                elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_EAST.value:
-                    s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["EAST"]}'
-                elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_SOUTH.value:
-                    s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["SOUTH"]}'
-                elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_WEST.value:
-                    s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["WEST"]}'
-                elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_BUILD_CITY.value:
-                    s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["BUILD_CITY"]} {s_unit}'
-                else:
-                    logging.error(f"Invalid Citytile action: {n_max_q_index}")
-                    return list()
-                #add action string to list of actionstrings for this turn
-                ls_actions_unit.append(s_action)
+                    #emit CITYTILE_RESEARCH
+                    if n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_NORTH.value:
+                        s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["NORTH"]}'
+                    elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_EAST.value:
+                        s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["EAST"]}'
+                    elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_SOUTH.value:
+                        s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["SOUTH"]}'
+                    elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_MOVE_WEST.value:
+                        s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["MOVE"]} {s_unit} {GAME_CONSTANTS["DIRECTIONS"]["WEST"]}'
+                    elif n_max_q_index == Action.E_OUTPUT_SPACIAL_MATRICIES.UNIT_BUILD_CITY.value:
+                        s_action = f'{GAME_CONSTANTS["ACTION"]["UNIT"]["BUILD_CITY"]} {s_unit}'
+                    else:
+                        logging.error(f"Invalid Citytile action: {n_max_q_index}")
+                        return list()
+                    #add action string to list of actionstrings for this turn
+                    ls_actions_unit.append(s_action)
 
             #Reverse Translation. Signal which action has been translated
             for n_index_reverse in ln_unit_action_index:
