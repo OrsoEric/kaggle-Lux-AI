@@ -66,6 +66,33 @@ class Bnb_model:
 
         return False
 
+    def inference( self, ic_in: Perception, ic_out: Action ) -> bool:
+        """Runs inference on BNB
+        Args:
+            ic_in (Perception): [description]
+            ic_out (Action): [description]
+        Returns:
+            bool: [description]
+        """
+        #flatten input mats into a vector
+        #cnp_in_mats = ic_in.mats.reshape( [-1] )
+        #logging.debug(f"In Shape: {cnp_in_mats.shape} ")
+        #run the inference
+        #cnp_out_mats = self.c_model.predict( cnp_in_mats )
+        
+        logging.debug(f"In Shape: {ic_in.mats.shape} ")
+        cnp_out_mats = self.c_model.predict( ic_in.mats  )
+
+        #anti-flatten
+        cnp_out_mats = cnp_out_mats.reshape( ic_out.mats.shape )
+        #write back
+        ic_out.mats = cnp_out_mats
+
+        logging.debug(f"Out Shape: {ic_out.mats} ")
+
+        return False
+
+
     def train( self, lc_step_in : list, lc_step_out : list, n_max_epochs = 10 ) -> bool:
         """Train model based on a input list of Perceptions and an input list of actions.
         each entry in each list is one turn, detailing which move was taken based on game state
@@ -109,10 +136,6 @@ class Bnb_model:
     def load( self, s_path : str ) -> bool:
 
         self.c_model.load_weights("shaka")
-
-        return False
-
-    def bnb_model_inference( c_in: Perception, c_out: Action ) -> bool:
 
         return False
 

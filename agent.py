@@ -12,6 +12,7 @@ Releases:
 #   IMPORTS
 #--------------------------------------------------------------------------------------------------------------------------------
 
+from big_no_brainer.model_tf import Bnb_model
 import math
 import pickle
 import logging
@@ -91,14 +92,20 @@ def agent( observation , configurations ):
 	c_perception = Perception()
 	c_perception.from_game( game_state )
 
-
-
 	#--------------------------------------------------------------------------------------------------------------------------------
 	# 	BNB Big No Brainer network
 	#--------------------------------------------------------------------------------------------------------------------------------
 
 	#generates a virgin action
 	c_action = Action()
+
+    c_model = Bnb_model()
+
+	#--------------------------------------------------------------------------------------------------------------------------------
+	# 	BNB Big No Brainer network
+	#--------------------------------------------------------------------------------------------------------------------------------
+
+    #Action translation. Emit moves
 	agent_actions = c_action.translate()
 	
 	logging.debug(f"Actions: {agent_actions}")

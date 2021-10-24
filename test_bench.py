@@ -38,7 +38,9 @@ from big_no_brainer.model_tf import Bnb_model
 #depickle a game state, and test the construction of a perception
 TEST_TF_MODEL = False
 
-TEST_TF_LOAD_MODEL = True
+TEST_TF_LOAD_MODEL = False
+
+TEST_EMIT_ACTION = True
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #   TEST BENCHES
@@ -93,6 +95,35 @@ if __name__ == "__main__":
         logging.debug(f"Restoring weights...")
         c_model.load("shaka")
         c_model.c_model.summary()
+
+        #c_model.predict()
+
+
+        pass
+
+    if TEST_EMIT_ACTION == True:
+        #construct zero input
+        c_perception = Perception()
+        c_action = Action( 32 )
+
+        logging.debug(f"input state: {c_perception.status.shape}")
+        logging.debug(f"input mats: {c_perception.mats.shape}")
+        logging.debug(f"output mats: {c_action.mats.shape}")
+
+        #Construct BNB class
+        c_model = Bnb_model()
+        #Construct a ML model based on what Perception and Action look like
+        c_model.build( c_perception, c_action )
+        #Loads the weights of a previously trained BNB class
+        logging.debug(f"Restoring weights...")
+        c_model.load("shaka")
+        c_model.c_model.summary()
+        #execute inference
+        c_model.inference( c_perception, c_action )
+        #translate action
+        ls_actions = c_action.translate()
+
+        print( ls_actions )
 
         #c_model.predict()
 
