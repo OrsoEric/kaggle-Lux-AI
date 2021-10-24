@@ -81,7 +81,9 @@ class Bnb_model:
         #cnp_out_mats = self.c_model.predict( cnp_in_mats )
         
         logging.debug(f"In Shape: {ic_in.mats.shape} ")
-        cnp_out_mats = self.c_model.predict( ic_in.mats  )
+        cnp_in_mats = ic_in.mats.reshape( [1]+[n_tmp for n_tmp in ic_in.mats.shape ] )
+        logging.debug(f"In Shape: {cnp_in_mats.shape} ")
+        cnp_out_mats = self.c_model.predict( cnp_in_mats )
 
         #anti-flatten
         cnp_out_mats = cnp_out_mats.reshape( ic_out.mats.shape )
