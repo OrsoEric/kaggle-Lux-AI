@@ -121,10 +121,9 @@ if __name__ == "__main__":
         c_model.c_model.summary()
         #execute inference
         c_model.inference( c_perception, c_action )
-        #translate action
+        #translate action into a list of "action strings" to be fed to the bot
         ls_actions = c_action.translate()
-        
-        print( ls_actions )
+        logging.info(f"Number of actions: {len(ls_actions)} | Actions >{ls_actions}<")
 
         pass
 
