@@ -59,7 +59,7 @@ import matplotlib.animation as animation
 #--------------------------------------------------------------------------------------------------------------------------------
 #   Action
 #--------------------------------------------------------------------------------------------------------------------------------
-#   This class translates the 15*32*32 output of the BNB network into actions emitted to the Game
+#   This class translates the 10*32*32 output of the BNB network into actions emitted to the Game
 #   Only one player is controlled, only units/citytiles that can act are emitted for action
 #   Action chooses the maximum Q above a threshold amongst the matricies it has access to
 #   Action back propagate on the BNB output matrix a positive for action choosen, a 0 for action discarded, a -1 for action invalid
@@ -126,8 +126,6 @@ class Action():
         self.d_units = None
         #initialize output spacial mats
         self.mats = np.zeros( (len(Action.E_OUTPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
-
-        
 
         return False
 
@@ -472,8 +470,27 @@ class Action():
 
     #----------------    Public Members    ----------------
 
-    def fill_mats( self, id_units : dict, ils_actions : list ):
+    def import_units( self, id_units : dict ) -> bool:
+        """Action needs to know the position of each unit to be able to translate "action strings"
+        Args:
+            id_units (dict): [description]
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+        
+        #save dictionary of units
+        self.d_units = id_units
 
+        return False
+
+    def fill_mats( self, id_units : dict, ils_actions : list ) -> bool:
+        """
+        Args:
+            id_units (dict): dictionary associating unit name with its coordinate on the map. Both players. None means no unit.
+            ils_actions (list): list of "action strings". needed for reverse translation from action strings to mats.
+        Returns:
+            bool: False=OK | True=FAIL
+        """
         #finally call the parser that decodes a list of string actions filling the output mat
         if self._parse_agent_actions( id_units, ils_actions ) == True:
             logging.error(f"failed to parse string actions: {ils_actions}")

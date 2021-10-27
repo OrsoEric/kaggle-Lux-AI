@@ -122,6 +122,7 @@ if __name__ == "__main__":
         c_model.inference( c_perception, c_action )
         #translate action
         ls_actions = c_action.translate()
+        
 
         print( ls_actions )
 
@@ -129,3 +130,6 @@ if __name__ == "__main__":
 
 
         pass
+
+
+    
