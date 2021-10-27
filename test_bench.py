@@ -74,8 +74,6 @@ if __name__ == "__main__":
         #Construct a ML model based on what Perception and Action look like
         c_model.build( c_perception, c_action )
 
-
-
         pass	
 
     if TEST_TF_LOAD_MODEL == True:
@@ -102,9 +100,12 @@ if __name__ == "__main__":
         pass
 
     if TEST_EMIT_ACTION == True:
-        #construct zero input
+        #construct the perception class
         c_perception = Perception()
-        c_action = Action( 32 )
+        #Construct the action class
+        c_action = Action()
+        #Use Perception to initialize its Action
+        c_action.import_perception( c_perception )
 
         logging.debug(f"input state: {c_perception.status.shape}")
         logging.debug(f"input mats: {c_perception.mats.shape}")
@@ -123,11 +124,7 @@ if __name__ == "__main__":
         #translate action
         ls_actions = c_action.translate()
         
-
         print( ls_actions )
-
-        #c_model.predict()
-
 
         pass
 

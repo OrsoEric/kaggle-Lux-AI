@@ -122,6 +122,8 @@ class Perception():
         self.status = np.zeros( len(Perception.E_INPUT_STATUS_VECTOR) )
         #initialize perception matricies
         self.mats = np.zeros( (len(Perception.E_INPUT_SPACIAL_MATRICIES), GAME_CONSTANTS['MAP']['WIDTH_MAX'], GAME_CONSTANTS['MAP']['HEIGHT_MAX']) )
+        #dictionary of units on the map
+        self.d_unit = None
 
         return False
 

@@ -90,24 +90,19 @@ class Action():
 
     #----------------    Constructor    ----------------
 
-    def __init__( self, in_map_size : int ):
+    def __init__( self ):
         """Constructor. Initialize mats and vars
-        Args:
-            ic_json (json): opened replay.json
-            ild_units (list): list of dictionaries of units and their position. required to decode actions. one per turn, 360 turn per game.
-                e.g. { u_1 : ( 11, 17 ), u_5 : ( 12, 17 ) }
-            in_player (int): player for which Action is to be extracted. 2 player in a replay.json
         """
 
         #initialize class vars
-        if self.__init_vars( in_map_size ):
+        if self.__init_vars():
             logging.critical( f"Failed to initialize class vars" )
 
         return
 
     #----------------    Overloads    ----------------
 
-    def __str__(self) -> str:
+    def __str__( self ) -> str:
         ln_sum = list()
         for e_header in Action.E_OUTPUT_SPACIAL_MATRICIES:
             ln_sum.append( self.mats[e_header.value].sum() ) 
@@ -115,13 +110,13 @@ class Action():
 
     #----------------    Private Members    ----------------
 
-    def __init_vars( self, in_map_size : int ) -> bool:
+    def __init_vars( self ) -> bool:
         """Initialize class vars
         Returns:
             bool: False=OK | True=FAIL
         """
-        #Map size. Needed for shift
-        self._set_map_size( in_map_size )
+        #Map size. Needed for shift. Initialize to invalid.
+        self._set_map_size( 0 )
         #dictionary of units. needed for direct and reverse unit<->position tranlsation
         self.d_units = None
         #initialize output spacial mats
@@ -130,6 +125,14 @@ class Action():
         return False
 
     def __accumulate_mat( self, n_index : int, in_x : int, in_y : int ) -> bool:
+        """ Increase the tile in a given mat in a given coordinate by one
+        Args:
+            n_index (int): action mat index.
+            in_x (int): coordinate of increment
+            in_y (int): coordinate of increment
+        Returns:
+            bool: False=OK | True=FAIL
+        """
 
         n_x = int(self._w_shift +in_x)
         n_y = int(self._h_shift +in_y)
@@ -149,11 +152,35 @@ class Action():
     #----------------    Protected Members    ----------------
 
     def _set_map_size( self, in_map_size : int ) -> bool:
-        #size of the map in cells. THe map is square
+        """Set the size of the map. Set the offset to make the mats centered
+        Args:
+            in_map_size (int): size of the map in tiles
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+        #size of the map in cells. The map is square
         self.n_map_size = int(in_map_size)
         #set the offset. all map sizes uses max size and are shifted to be centered. Helps neural network convolution to generalize.
         self._w_shift = int( (GAME_CONSTANTS['MAP']['WIDTH_MAX'] -in_map_size) // 2 )
         self._h_shift = int( (GAME_CONSTANTS['MAP']['HEIGHT_MAX'] -in_map_size) // 2 )
+
+        return False
+
+    def _set_dict_unit( self, id_units : dict ) -> bool:
+        """Action needs to know the position of each unit to be able to translate "action strings"
+        Association is stored in a dictionary.
+        Args:
+            id_units (dict): [description]
+        Returns:
+            bool: False=OK | True=FAIL
+        """
+
+        #list is empty
+        if id_units is None:
+            return False    
+
+        #save dictionary of units
+        self.d_units = id_units
 
         return False
 
@@ -470,16 +497,26 @@ class Action():
 
     #----------------    Public Members    ----------------
 
-    def import_units( self, id_units : dict ) -> bool:
-        """Action needs to know the position of each unit to be able to translate "action strings"
+    def import_perception( self, ic_perception : Perception ) -> bool: 
+        """ From a Perception class import what's needed to initialize an accociated Action class.
+        Needs map size for size and offsets of the mats
+        Needs a dictionary of units to be able to emits action strings for units
         Args:
-            id_units (dict): [description]
+            ic_perception (Perception): Perception
         Returns:
             bool: False=OK | True=FAIL
         """
-        
-        #save dictionary of units
-        self.d_units = id_units
+
+        #Initialize map size from Perception
+        n_map_size = ic_perception.status[ Perception.E_INPUT_STATUS_VECTOR.MAP_SIZE.value ]
+        if self._set_map_size( n_map_size ):
+            logging.critical(f"failed to set map size: {n_map_size}")
+            return True
+
+        #Initialize dictionary of units from Perception
+        if self._set_dict_unit( ic_perception.d_unit ):
+            logging.critical(f"failed to set dictionary of units")
+            return True
 
         return False
 
