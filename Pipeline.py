@@ -92,5 +92,5 @@ def pipeline():
     ds_batches = ds.shuffle(n_shuffle).padded_batch(n_batch)
     tf.data.experimental.cardinality(ds_batches).numpy()  # print number of turns in a batch
 
-    return ds_batches
+    return in_mat, in_stat, out_1, ds_batches
 

@@ -14,9 +14,10 @@ import Pipeline
 from big_no_brainer import model_tf
 
 if __name__ == "__main__":
-
-    ds_batches = Pipeline.pipeline()
+    in_mat, in_stat, out_1, ds_batches = Pipeline.pipeline()
     model = model_tf.bnb_model_tf()
+    model.compile(loss=losses.MeanSquaredError(), optimizer=optimizers.Adam())
 
-    model.fit(ds_)
+    model.fit(x=(in_mat, in_stat), y=out_1, batch_size=72, epochs=5)
+    model.save("test")
 
