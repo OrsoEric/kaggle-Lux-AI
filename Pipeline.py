@@ -3,7 +3,7 @@ import os
 import numpy as np
 import tensorflow as tf
 
-# Replay class takes care of loading and conversions from a replay.json created by lux-ai to Perception and Action classes
+#  Replay class takes care of loading and conversions from a replay.json created by lux-ai to Perception and Action classes
 from big_no_brainer.perception import Perception
 from big_no_brainer.action import Action
 from big_no_brainer.replay import Replay
@@ -93,4 +93,3 @@ def pipeline():
     tf.data.experimental.cardinality(ds_batches).numpy()  # print number of turns in a batch
 
     return in_mat, in_stat, out_1, ds_batches
-

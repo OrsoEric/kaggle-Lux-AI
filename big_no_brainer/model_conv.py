@@ -1,5 +1,4 @@
-# --------------------------------------------------------------------------------------------------------------------------------
-#   IMPORT
+#IMPORT
 # --------------------------------------------------------------------------------------------------------------------------------
 import tensorflow as tf
 from tensorflow import float32
@@ -20,12 +19,21 @@ import Pipeline
 #   MODEL
 # --------------------------------------------------------------------------------------------------------------------------------
 
-def bnb_model_tf():
+def model_conv():
 
     input_mats = Input(shape=(8, 32, 32), name="in_mat", dtype=float32)
-    #  inserire qui convolutional
-    input_mats_flat = layers.Flatten()(input_mats)
-    first_dense = layers.Dense(8192, )(input_mats_flat)
+    conv1_l = []
+    y = tf.unstack(input_mats, axis=1)
+    for x in y:
+        x = layers.Reshape(target_shape=(32, 32, 1), input_shape=(32, 32))(x)
+        conv1_l.append(layers.Conv2D(filters=1, kernel_size=4, activation='relu', input_shape=(-1, 32, 32, 1))(x))
+    pol_1 = [layers.AveragePooling2D(2)(x) for x in conv1_l]
+    conv2_l = [layers.Conv2D(filters=1, kernel_size=4, activation='relu', input_shape=(-1, 14, 14, 1))(x) for x in pol_1]
+    pol_2 = [layers.AveragePooling2D(2)(x) for x in conv2_l]
+    out_conv = tf.stack(conv2_l, axis=1)
+
+    input_mats_flat = layers.Flatten()(out_conv)
+    first_dense = layers.Dense(968, )(input_mats_flat)
     input_status = Input(shape=(9,), name="in_status", dtype=float32)
     # second_dense = layers.Dense(9,)(input_status)  # dunno if necessary
     merge = layers.concatenate([first_dense, input_status], axis=1)
