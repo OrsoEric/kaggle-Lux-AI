@@ -250,7 +250,8 @@ class Replay():
             #scan dictionary of units and list of string actions for each step (turn) of the game
             for d_units, s_actions in zip( ld_units, ls_actions ):
                 #for this step (turn), decode the Action that the Player took
-                c_action = Action( lc_perceptions[0].status[ Perception.E_INPUT_STATUS_VECTOR.MAP_SIZE.value ] )
+                c_action = Action(  )
+                c_action._set_map_size( lc_perceptions[0].status[ Perception.E_INPUT_STATUS_VECTOR.MAP_SIZE.value ] )
                 c_action.fill_mats( d_units, s_actions )
                 #add this step (turn) Action to the list of Action this player took over the whole game
                 lc_action.append( c_action )
